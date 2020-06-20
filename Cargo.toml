@@ -1,10 +1,5 @@
-[package]
-name = "epitok"
-version = "0.1.0"
-authors = ["Philippe Loctaux <p@philippeloctaux.com>"]
-edition = "2018"
-
-[dependencies]
-reqwest = { version = "0.10.6", features = ["blocking", "json"] }
-regex = "1.3.9"
-serde_json = "1.0"
+[workspace]
+members = [
+    "lib",
+    "bin"
+]

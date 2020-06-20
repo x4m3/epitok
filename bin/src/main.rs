@@ -1,6 +1,4 @@
-mod authentication;
-
-use authentication::Authentication;
+use epitok_lib::authentication::{Authentication, AuthStatus};
 
 fn print(user: &Authentication) {
     println!("login     : {:?}", user.get_login());
