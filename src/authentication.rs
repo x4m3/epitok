@@ -5,6 +5,7 @@ pub enum AuthStatus {
     NetworkError,
     AccessDenied,
     IntraDown,
+    UnknownError,
 }
 
 pub struct Authentication {
@@ -83,6 +84,33 @@ impl Authentication {
         if intra_req.status() != reqwest::StatusCode::OK {
             self.status = Some(AuthStatus::IntraDown);
             return;
+        }
+
+        // get request's content
+        let raw = match intra_req.text() {
+            Ok(raw) => raw,
+            Err(_) => {
+                self.status = Some(AuthStatus::UnknownError);
+                return;
+            }
+        };
+
+        // parse json
+        let json: serde_json::Value = match serde_json::from_str(&raw) {
+            Ok(json) => json,
+            Err(_) => {
+                self.status = Some(AuthStatus::UnknownError);
+                return;
+            }
+        };
+
+        // store login
+        match json["login"].as_str() {
+            Some(login) => self.login = Some(login.to_string()),
+            None => {
+                self.status = Some(AuthStatus::UnknownError);
+                return;
+            }
         }
 
         self.status = Some(AuthStatus::Valid);
