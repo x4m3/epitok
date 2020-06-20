@@ -115,4 +115,9 @@ impl Authentication {
 
         self.status = Some(AuthStatus::Valid);
     }
+
+    pub fn sign_out(&mut self) {
+        self.login = None;
+        self.status = None;
+    }
 }
