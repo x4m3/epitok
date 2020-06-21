@@ -24,8 +24,8 @@ impl fmt::Display for Error {
 }
 
 pub struct Auth {
-    autologin: Option<String>,
-    login: Option<String>,
+    autologin: String,
+    login: String,
 }
 
 impl Auth {
@@ -42,11 +42,19 @@ impl Auth {
         };
 
         let user = Auth {
-            autologin: Some(autologin.to_string()),
-            login: Some(login.to_string()),
+            autologin: autologin.to_string(),
+            login: login.to_string(),
         };
 
         Ok(user)
+    }
+
+    pub fn get_autologin(&self) -> &str {
+        &self.autologin
+    }
+
+    pub fn get_login(&self) -> &str {
+        &self.login
     }
 
     fn check_autologin(new: &str) -> bool {
@@ -108,11 +116,4 @@ impl Auth {
         }
     }
 
-    pub fn get_autologin(&self) -> &Option<String> {
-        &self.autologin
-    }
-
-    pub fn get_login(&self) -> &Option<String> {
-        &self.login
-    }
 }
