@@ -1,34 +1,55 @@
-#[derive(Debug)]
-pub enum Status {
-    Valid,
-    InvalidCredentials,
-    NetworkError,
+use std::fmt;
+
+pub enum Error {
+    Credentials,
+    Network,
     AccessDenied,
     IntraDown,
-    UnknownError,
+    Parsing,
+    NoLogin,
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let message = match *self {
+            Error::Credentials => "Invalid autologin link",
+            Error::Network => "No internet access",
+            Error::AccessDenied => "You do not have permission to access this resource",
+            Error::IntraDown => "Could not connect to the epitech intranet",
+            Error::Parsing => "Failed to parse retrieved data from the intranet",
+            Error::NoLogin => "You do not have a login associated with your intranet profile",
+        };
+        write!(f, "{}", message)
+    }
 }
 
 pub struct Auth {
     autologin: Option<String>,
     login: Option<String>,
-    status: Option<Status>,
 }
 
 impl Auth {
-    pub fn new() -> Auth {
-        Auth {
-            autologin: None,
-            login: None,
-            status: None,
+    pub fn new(autologin: &str) -> Result<Auth, Error> {
+        // check autologin
+        if Auth::check_autologin(autologin) == false {
+            return Err(Error::Credentials);
         }
+
+        // sign in
+        let login = match Auth::sign_in(autologin) {
+            Ok(login) => login,
+            Err(e) => return Err(e),
+        };
+
+        let user = Auth {
+            autologin: Some(autologin.to_string()),
+            login: Some(login.to_string()),
+        };
+
+        Ok(user)
     }
 
-    pub fn get_autologin(&self) -> &Option<String> {
-        &self.autologin
-    }
-
-    pub fn set_autologin(&mut self, new: &str) -> bool {
-
+    fn check_autologin(new: &str) -> bool {
         // prepare regex
         let rule = "^(https://intra.epitech.eu/auth-[a-z0-9]{40})$";
         let re = match regex::Regex::new(rule) {
@@ -37,119 +58,61 @@ impl Auth {
         };
 
         // regex check
-        if re.is_match(new) == false {
-            return false;
-        }
-
-        self.autologin = Some(new.to_string());
-
-        true
+        re.is_match(new)
     }
 
-    pub fn get_login(&self) -> &Option<String> {
-        &self.login
-    }
-
-    pub fn get_status(&self) -> &Option<Status> {
-        &self.status
-    }
-
-    pub fn sign_in(&mut self) {
-        // make sure credentials are valid
-        let url = match self.get_autologin() {
-            Some(autologin) => format!("{}/user?format=json", autologin),
-            None => {
-                self.status = Some(Status::InvalidCredentials);
-                return;
-            }
-        };
+    fn sign_in(autologin: &str) -> Result<String, Error> {
+        let url = format!("{}/user?format=json", autologin);
 
         // make network request to intra
         let intra_req = match reqwest::blocking::get(&url) {
             Ok(body) => body,
             Err(e) => {
                 println!("{}", e);
-                self.status = Some(Status::NetworkError);
-                return;
+                return Err(Error::Network);
             }
         };
 
         // user does not have access (bad autologin for example)
         if intra_req.status() == reqwest::StatusCode::FORBIDDEN {
-            self.status = Some(Status::AccessDenied);
-            return;
+            return Err(Error::AccessDenied);
         }
 
         // intra is probably down
         if intra_req.status() != reqwest::StatusCode::OK {
-            self.status = Some(Status::IntraDown);
-            return;
+            return Err(Error::IntraDown);
         }
 
         // get request's content
         let raw = match intra_req.text() {
             Ok(raw) => raw,
-            Err(_) => {
-                self.status = Some(Status::UnknownError);
-                return;
+            Err(e) => {
+                println!("{}", e);
+                return Err(Error::Parsing);
             }
         };
 
         // parse json
         let json: serde_json::Value = match serde_json::from_str(&raw) {
             Ok(json) => json,
-            Err(_) => {
-                self.status = Some(Status::UnknownError);
-                return;
+            Err(e) => {
+                println!("{}", e);
+                return Err(Error::Parsing);
             }
         };
 
-        // store login
+        // get user's login
         match json["login"].as_str() {
-            Some(login) => self.login = Some(login.to_string()),
-            None => {
-                self.status = Some(Status::UnknownError);
-                return;
-            }
+            Some(login) => Ok(login.to_string()),
+            None => Err(Error::NoLogin),
         }
-
-        self.status = Some(Status::Valid);
     }
 
-    pub fn sign_out(&mut self) {
-        self.login = None;
-        self.status = None;
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::auth::Auth;
-
-    #[test]
-    fn autologin_good() {
-        let mut user = Auth::new();
-        let ret = user.set_autologin("https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd");
-
-        assert_eq!(ret, true);
+    pub fn get_autologin(&self) -> &Option<String> {
+        &self.autologin
     }
 
-    #[test]
-    fn autologin_bad() {
-        let mut user = Auth::new();
-        let ret = user.set_autologin("https://intra.epitech.eu/auth-nope");
-
-        assert_eq!(ret, false);
-    }
-
-    #[test]
-    fn get_autologin() {
-        let mut user = Auth::new();
-        let autologin = "https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd";
-
-        user.set_autologin(&autologin);
-        let res = user.get_autologin().as_ref().unwrap();
-
-        assert_eq!(autologin, res);
+    pub fn get_login(&self) -> &Option<String> {
+        &self.login
     }
 }
