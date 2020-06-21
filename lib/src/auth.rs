@@ -121,3 +121,35 @@ impl Auth {
         self.status = None;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::auth::Auth;
+
+    #[test]
+    fn autologin_good() {
+        let mut user = Auth::new();
+        let ret = user.set_autologin("https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd");
+
+        assert_eq!(ret, true);
+    }
+
+    #[test]
+    fn autologin_bad() {
+        let mut user = Auth::new();
+        let ret = user.set_autologin("https://intra.epitech.eu/auth-nope");
+
+        assert_eq!(ret, false);
+    }
+
+    #[test]
+    fn get_autologin() {
+        let mut user = Auth::new();
+        let autologin = "https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd";
+
+        user.set_autologin(&autologin);
+        let res = user.get_autologin().as_ref().unwrap();
+
+        assert_eq!(autologin, res);
+    }
+}
