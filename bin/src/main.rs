@@ -1,6 +1,6 @@
-use epitok_lib::authentication::{Authentication, AuthStatus};
+use epitok_lib::auth::Auth;
 
-fn print(user: &Authentication) {
+fn print(user: &Auth) {
     println!("login     : {:?}", user.get_login());
     println!("autologin : {:?}", user.get_autologin());
     println!("status    : {:?}", user.get_status());
@@ -8,7 +8,7 @@ fn print(user: &Authentication) {
 }
 
 fn main() {
-    let mut phil = Authentication::new();
+    let mut phil = Auth::new();
 
     print(&phil);
 
@@ -16,5 +16,4 @@ fn main() {
     phil.sign_in();
 
     print(&phil);
-
 }

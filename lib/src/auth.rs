@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub enum AuthStatus {
+pub enum Status {
     Valid,
     InvalidCredentials,
     NetworkError,
@@ -8,15 +8,15 @@ pub enum AuthStatus {
     UnknownError,
 }
 
-pub struct Authentication {
+pub struct Auth {
     autologin: Option<String>,
     login: Option<String>,
-    status: Option<AuthStatus>,
+    status: Option<Status>,
 }
 
-impl Authentication {
-    pub fn new() -> Authentication {
-        Authentication {
+impl Auth {
+    pub fn new() -> Auth {
+        Auth {
             autologin: None,
             login: None,
             status: None,
@@ -50,7 +50,7 @@ impl Authentication {
         &self.login
     }
 
-    pub fn get_status(&self) -> &Option<AuthStatus> {
+    pub fn get_status(&self) -> &Option<Status> {
         &self.status
     }
 
@@ -59,7 +59,7 @@ impl Authentication {
         let url = match self.get_autologin() {
             Some(autologin) => format!("{}/user?format=json", autologin),
             None => {
-                self.status = Some(AuthStatus::InvalidCredentials);
+                self.status = Some(Status::InvalidCredentials);
                 return;
             }
         };
@@ -69,20 +69,20 @@ impl Authentication {
             Ok(body) => body,
             Err(e) => {
                 println!("{}", e);
-                self.status = Some(AuthStatus::NetworkError);
+                self.status = Some(Status::NetworkError);
                 return;
             }
         };
 
         // user does not have access (bad autologin for example)
         if intra_req.status() == reqwest::StatusCode::FORBIDDEN {
-            self.status = Some(AuthStatus::AccessDenied);
+            self.status = Some(Status::AccessDenied);
             return;
         }
 
         // intra is probably down
         if intra_req.status() != reqwest::StatusCode::OK {
-            self.status = Some(AuthStatus::IntraDown);
+            self.status = Some(Status::IntraDown);
             return;
         }
 
@@ -90,7 +90,7 @@ impl Authentication {
         let raw = match intra_req.text() {
             Ok(raw) => raw,
             Err(_) => {
-                self.status = Some(AuthStatus::UnknownError);
+                self.status = Some(Status::UnknownError);
                 return;
             }
         };
@@ -99,7 +99,7 @@ impl Authentication {
         let json: serde_json::Value = match serde_json::from_str(&raw) {
             Ok(json) => json,
             Err(_) => {
-                self.status = Some(AuthStatus::UnknownError);
+                self.status = Some(Status::UnknownError);
                 return;
             }
         };
@@ -108,12 +108,12 @@ impl Authentication {
         match json["login"].as_str() {
             Some(login) => self.login = Some(login.to_string()),
             None => {
-                self.status = Some(AuthStatus::UnknownError);
+                self.status = Some(Status::UnknownError);
                 return;
             }
         }
 
-        self.status = Some(AuthStatus::Valid);
+        self.status = Some(Status::Valid);
     }
 
     pub fn sign_out(&mut self) {
