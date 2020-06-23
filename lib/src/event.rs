@@ -1,5 +1,6 @@
 use std::{error, fmt};
 use crate::intra;
+use crate::student::{Student, fetch_students};
 
 #[derive(Debug)]
 pub struct Event {
@@ -9,7 +10,7 @@ pub struct Event {
     date: chrono::NaiveDate,
     start: String,
     end: String,
-    // TODO: student type
+    students: Vec<Student>,
 }
 
 impl Event {
@@ -141,6 +142,12 @@ pub fn list_events(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>>
             None => return Err(Error::Time(Time::End).into()),
         };
 
+        // fetch list of students registered to event
+        let students = match fetch_students(autologin, &code) {
+            Ok(students) => students,
+            Err(e) => return Err(e.into()),
+        };
+
         list.push(Event {
             code,
             title,
@@ -148,10 +155,9 @@ pub fn list_events(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>>
             date,
             start,
             end,
+            students,
         });
     }
-
-    // for each event that requires a token, add it and fetch list of students
 
     Ok(list)
 }
