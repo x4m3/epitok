@@ -1,10 +1,11 @@
-use std::error;
+use std::{error, fmt};
 use crate::intra;
 
+#[derive(Debug)]
 pub struct Event {
+    code: String,
     title: String,
     module: String,
-    code: String,
     date: chrono::Date<chrono::Local>,
     start: String,
     end: String,
@@ -16,12 +17,36 @@ impl Event {
     pub fn fetch_students() {}
 }
 
-enum Time {
-    Start,
-    End
+#[derive(Debug)]
+pub enum Error {
+    EventURL,
+    Title,
+    Module,
+    Time(Time),
 }
 
-fn parse_time(json: &serde_json::Value, time: Time) -> String {
+impl error::Error for Error {}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let message = match *self {
+            Error::EventURL => "Event doesn't have a url (how is this even possible?)",
+            Error::Title => "This event does not have a title",
+            Error::Module => "This event does not belong to a module",
+            Error::Time(Time::Start) => "This event does not have a starting time",
+            Error::Time(Time::End) => "This event does not have a finish time",
+        };
+        write!(f, "{}", message)
+    }
+}
+
+#[derive(Debug)]
+pub enum Time {
+    Start,
+    End,
+}
+
+fn parse_time(json: &serde_json::Value, time: Time) -> Option<String> {
     let time = match time {
         Time::Start => "start",
         Time::End => "end",
@@ -29,11 +54,15 @@ fn parse_time(json: &serde_json::Value, time: Time) -> String {
 
     return match json[time].as_str() {
         Some(start) => match chrono::NaiveDateTime::parse_from_str(&start, "%Y-%m-%d %H:%M:%S") {
-            Ok(start) => start.format("%H:%M").to_string(),
-            Err(_) => format!("No {} time", time),
+            Ok(start) => Some(start.format("%H:%M").to_string()),
+            Err(_) => None,
         },
-        None => format!("No {} time", time),
+        None => None,
     };
+}
+
+fn construct_event_url(json: &serde_json::Value) -> Option<String> {
+    Some("url".to_string())
 }
 
 pub fn list_events(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
@@ -52,27 +81,45 @@ pub fn list_events(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>>
     let mut list = Vec::new();
 
     for event in &json {
+        // check if this event can have tokens
+        match event["is_rdv"].as_str() {
+            Some(is_rdv) => match is_rdv {
+                "0" => (),
+                _ => continue, // iterate over next event, skip this one
+            },
+            None => continue,
+        };
+
+        let code = match construct_event_url(&event) {
+            Some(code) => code,
+            None => return Err(Error::EventURL.into()),
+        };
+
         let title = match event["acti_title"].as_str() {
             Some(title) => title.to_string(),
-            None => "Unknown Title".to_string(),
+            None => return Err(Error::Title.into()),
         };
 
         let module = match event["titlemodule"].as_str() {
             Some(module) => module.to_string(),
-            None => "Unknown Module".to_string(),
+            None => return Err(Error::Module.into()),
         };
 
-        // TODO: code
+        let date = today.clone(); // TODO: remove the timezone
 
-        let date = today.clone();
-
-        let start = parse_time(&event, Time::Start);
-        let end = parse_time(&event, Time::End);
+        let start = match parse_time(&event, Time::Start) {
+            Some(start) => start,
+            None => return Err(Error::Time(Time::Start).into()),
+        };
+        let end = match parse_time(&event, Time::End) {
+            Some(end) => end,
+            None => return Err(Error::Time(Time::End).into()),
+        };
 
         list.push(Event {
+            code,
             title,
             module,
-            code,
             date,
             start,
             end,

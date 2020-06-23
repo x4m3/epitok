@@ -24,4 +24,7 @@ fn main() {
             return;
         }
     };
+    for event in today_events {
+        println!("{:?}", event);
+    }
 }
