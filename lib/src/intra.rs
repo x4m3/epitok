@@ -6,6 +6,7 @@ pub enum Error {
     AccessDenied,
     IntraDown,
     Parsing,
+    Empty,
 }
 
 impl error::Error for Error {}
@@ -17,6 +18,7 @@ impl fmt::Display for Error {
             Error::AccessDenied => "You do not have permission to access this resource",
             Error::IntraDown => "Could not connect to the epitech intranet",
             Error::Parsing => "Failed to parse retrieved data from the intranet",
+            Error::Empty => "Empty JSON array",
         };
         write!(f, "{}", message)
     }
@@ -75,11 +77,11 @@ pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
     };
 
     // parse json array of objects
-    match serde_json::from_str(&intra_request) {
+    return match serde_json::from_str(&intra_request) {
         Ok(json) => Ok(json),
         Err(e) => {
             println!("{}", e);
-            Err(Error::Parsing)
+            Err(Error::Empty) // Return Error::empty if there is nothing in the object
         }
-    }
+    };
 }
