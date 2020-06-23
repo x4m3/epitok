@@ -16,6 +16,26 @@ impl Event {
     pub fn fetch_students() {}
 }
 
+enum Time {
+    Start,
+    End
+}
+
+fn parse_time(json: &serde_json::Value, time: Time) -> String {
+    let time = match time {
+        Time::Start => "start",
+        Time::End => "end",
+    };
+
+    return match json[time].as_str() {
+        Some(start) => match chrono::NaiveDateTime::parse_from_str(&start, "%Y-%m-%d %H:%M:%S") {
+            Ok(start) => start.format("%H:%M").to_string(),
+            Err(_) => format!("No {} time", time),
+        },
+        None => format!("No {} time", time),
+    };
+}
+
 pub fn list_events(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
     let today = chrono::Local::today();
     let today_str = today.format("%Y-%m-%d").to_string();
@@ -46,21 +66,8 @@ pub fn list_events(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>>
 
         let date = today.clone();
 
-        let start = match event["start"].as_str() {
-            Some(start) => match chrono::NaiveDateTime::parse_from_str(&start, "%Y-%m-%d %H:%M:%S") {
-                Ok(start) => start.format("%H:%M").to_string(),
-                Err(_) => "No start time".to_string(),
-            },
-            None => "No start time".to_string(),
-        };
-
-        let end = match event["end"].as_str() {
-            Some(start) => match chrono::NaiveDateTime::parse_from_str(&start, "%Y-%m-%d %H:%M:%S") {
-                Ok(start) => start.format("%H:%M").to_string(),
-                Err(_) => "No end time".to_string(),
-            },
-            None => "No end time".to_string(),
-        };
+        let start = parse_time(&event, Time::Start);
+        let end = parse_time(&event, Time::End);
 
         list.push(Event {
             title,
