@@ -1,8 +1,9 @@
 use epitok_lib::auth::Auth;
+use epitok_lib::event;
 
 fn print(user: &Auth) {
-    println!("login     : {:?}", user.get_login());
-    println!("autologin : {:?}", user.get_autologin());
+    println!("login     : {}", user.get_login());
+    println!("autologin : {}", user.get_autologin());
     println!();
 }
 

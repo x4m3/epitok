@@ -1,22 +1,18 @@
-use std::fmt;
+use std::{error, fmt};
+use crate::intra;
 
+#[derive(Debug)]
 pub enum Error {
     Credentials,
-    Network,
-    AccessDenied,
-    IntraDown,
-    Parsing,
     NoLogin,
 }
+
+impl error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match *self {
             Error::Credentials => "Invalid autologin link",
-            Error::Network => "No internet access",
-            Error::AccessDenied => "You do not have permission to access this resource",
-            Error::IntraDown => "Could not connect to the epitech intranet",
-            Error::Parsing => "Failed to parse retrieved data from the intranet",
             Error::NoLogin => "You do not have a login associated with your intranet profile",
         };
         write!(f, "{}", message)
@@ -29,10 +25,10 @@ pub struct Auth {
 }
 
 impl Auth {
-    pub fn new(autologin: &str) -> Result<Auth, Error> {
+    pub fn new(autologin: &str) -> Result<Auth, Box<dyn error::Error>> {
         // check autologin
         if Auth::check_autologin(autologin) == false {
-            return Err(Error::Credentials);
+            return Err(Error::Credentials.into());
         }
 
         // sign in
@@ -69,51 +65,18 @@ impl Auth {
         re.is_match(new)
     }
 
-    fn sign_in(autologin: &str) -> Result<String, Error> {
+    fn sign_in(autologin: &str) -> Result<String, Box<dyn error::Error>> {
         let url = format!("{}/user?format=json", autologin);
 
-        // make network request to intra
-        let intra_req = match reqwest::blocking::get(&url) {
-            Ok(body) => body,
-            Err(e) => {
-                println!("{}", e);
-                return Err(Error::Network);
-            }
-        };
-
-        // user does not have access (bad autologin for example)
-        if intra_req.status() == reqwest::StatusCode::FORBIDDEN {
-            return Err(Error::AccessDenied);
-        }
-
-        // intra is probably down
-        if intra_req.status() != reqwest::StatusCode::OK {
-            return Err(Error::IntraDown);
-        }
-
-        // get request's content
-        let raw = match intra_req.text() {
-            Ok(raw) => raw,
-            Err(e) => {
-                println!("{}", e);
-                return Err(Error::Parsing);
-            }
-        };
-
-        // parse json
-        let json: serde_json::Value = match serde_json::from_str(&raw) {
-            Ok(json) => json,
-            Err(e) => {
-                println!("{}", e);
-                return Err(Error::Parsing);
-            }
+        let json = match intra::get_obj(&url) {
+            Ok(intra_request) => intra_request,
+            Err(e) => return Err(e.into()),
         };
 
         // get user's login
         match json["login"].as_str() {
             Some(login) => Ok(login.to_string()),
-            None => Err(Error::NoLogin),
+            None => Err(Error::NoLogin.into()),
         }
     }
-
 }
