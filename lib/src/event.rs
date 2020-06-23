@@ -6,7 +6,7 @@ pub struct Event {
     code: String,
     title: String,
     module: String,
-    date: chrono::Date<chrono::Local>,
+    date: chrono::NaiveDate,
     start: String,
     end: String,
     // TODO: student type
@@ -130,7 +130,7 @@ pub fn list_events(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>>
             None => return Err(Error::Module.into()),
         };
 
-        let date = today.clone(); // TODO: remove the timezone
+        let date = today.naive_local();
 
         let start = match parse_time(&event, Time::Start) {
             Some(start) => start,
