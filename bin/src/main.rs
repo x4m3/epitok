@@ -17,14 +17,30 @@ fn main() {
     };
     print(&user);
 
-    let today_events = match event::list_events(user.get_autologin()) {
+    let mut today_events = match event::list_events(user.get_autologin()) {
         Ok(events) => events,
         Err(e) => {
             println!("could not get today's events: {}", e);
             return;
         }
     };
-    for event in today_events {
-        println!("{:?}", event);
+
+    let event = &mut today_events[0]; // get first event
+
+    println!("{:?}", event);
+    println!();
+
+    for student in &event.students {
+        println!("{} {:?}", student.get_login(), student.get_presence());
+    }
+    println!();
+
+    match event.set_student_present("first.last@epitech.eu") {
+        true => (),
+        false => eprintln!("could not set user present\n"),
+    }
+
+    for student in &event.students {
+        println!("{} {:?}", student.get_login(), student.get_presence());
     }
 }

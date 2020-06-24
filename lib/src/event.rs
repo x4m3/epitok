@@ -10,12 +10,18 @@ pub struct Event {
     date: chrono::NaiveDate,
     start: String,
     end: String,
-    students: Vec<Student>,
+    pub students: Vec<Student>,
 }
 
 impl Event {
-    pub fn new() {}
-    pub fn fetch_students() {}
+    pub fn set_student_present(&mut self, login: &str) -> bool {
+        let student = match self.students.iter_mut().find(|s| s.get_login() == login) {
+            Some(student) => student,
+            None => return false,
+        };
+        student.set_present();
+        true
+    }
 }
 
 #[derive(Debug)]

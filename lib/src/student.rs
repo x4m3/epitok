@@ -2,7 +2,7 @@ use std::{error, fmt};
 use crate::intra;
 
 #[derive(Debug)]
-enum Presence {
+pub enum Presence {
     // there is no status yet
     None,
     // "present"
@@ -20,6 +20,28 @@ pub struct Student {
     login: String,
     name: String,
     presence: Presence,
+}
+
+impl Student {
+    pub fn get_login(&self) -> &str {
+        &self.login
+    }
+
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn get_presence(&self) -> &Presence {
+        &self.presence
+    }
+
+    pub fn set_present(&mut self) {
+        self.presence = Presence::Present
+    }
+
+    pub fn set_missing(&mut self) {
+        self.presence = Presence::Missing
+    }
 }
 
 #[derive(Debug)]
