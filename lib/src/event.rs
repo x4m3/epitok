@@ -1,6 +1,6 @@
 use std::{error, fmt};
 use crate::intra;
-use crate::student::{Student, fetch_students};
+use crate::student::{Student, fetch_students, Presence};
 
 #[derive(Debug)]
 pub struct Event {
@@ -19,7 +19,7 @@ impl Event {
             Some(student) => student,
             None => return false,
         };
-        student.set_present();
+        student.set_presence(Presence::Present);
         true
     }
 }

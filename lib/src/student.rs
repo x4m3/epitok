@@ -35,12 +35,8 @@ impl Student {
         &self.presence
     }
 
-    pub fn set_present(&mut self) {
-        self.presence = Presence::Present
-    }
-
-    pub fn set_missing(&mut self) {
-        self.presence = Presence::Missing
+    pub fn set_presence(&mut self, presence: Presence) {
+        self.presence = presence
     }
 }
 
