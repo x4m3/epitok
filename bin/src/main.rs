@@ -17,10 +17,10 @@ fn main() {
     };
     print(&user);
 
-    let mut today_events = match event::list_events(user.get_autologin()) {
+    let mut today_events = match event::list_events(user.get_autologin(), "2020-06-16") {
         Ok(events) => events,
         Err(e) => {
-            println!("could not get today's events: {}", e);
+            println!("could not get events: {}", e);
             return;
         }
     };

@@ -97,10 +97,13 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
     Some(format!("/module/{}/{}/{}/{}/{}", scolaryear, codemodule, codeinstance, codeacti, codeevent))
 }
 
-pub fn list_events(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
-    let today = chrono::Local::today();
-    let today_str = today.format("%Y-%m-%d").to_string();
-    let url = format!("{}/planning/load?format=json&start={}&end={}", autologin, today_str, today_str);
+pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
+    let date = match chrono::NaiveDate::parse_from_str(&raw_date, "%Y-%m-%d") {
+        Ok(date) => date,
+        Err(e) => return Err(e.into()),
+    };
+    let date_str = date.format("%Y-%m-%d").to_string();
+    let url = format!("{}/planning/load?format=json&start={}&end={}", autologin, date_str, date_str);
 
     let json = match intra::get_array_obj(&url) {
         Ok(json) => json,
@@ -137,7 +140,7 @@ pub fn list_events(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>>
             None => return Err(Error::Module.into()),
         };
 
-        let date = today.naive_local();
+        let date = date.clone();
 
         let start = match parse_time(&event, Time::Start) {
             Some(start) => start,
