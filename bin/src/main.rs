@@ -25,22 +25,19 @@ fn main() {
         }
     };
 
-    let event = &mut today_events[0]; // get first event
+    // let event = &mut today_events[0]; // get first event
 
-    println!("{:?}", event);
-    println!();
+    for event in &mut today_events {
+        println!("{} --- {}", event.get_title(), event.get_module());
 
-    for student in &event.students {
-        println!("{} {:?}", student.get_login(), student.get_presence());
-    }
-    println!();
+        for (i, student) in event.students.iter().enumerate() {
+            println!("items[{}][login]={}", i, student.get_login());
+            println!("items[{}][present]={:?}", i, student.get_presence());
+        }
 
-    match event.set_student_present("first.last@epitech.eu") {
-        true => (),
-        false => eprintln!("could not set user present\n"),
-    }
-
-    for student in &event.students {
-        println!("{} {:?}", student.get_login(), student.get_presence());
+        match event.set_student_present("first.last@epitech.eu") {
+            true => (),
+            false => eprintln!("could not set user present\n"),
+        }
     }
 }

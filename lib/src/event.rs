@@ -14,6 +14,30 @@ pub struct Event {
 }
 
 impl Event {
+    pub fn get_code(&self) -> &str {
+        &self.code
+    }
+
+    pub fn get_title(&self) -> &str {
+        &self.title
+    }
+
+    pub fn get_module(&self) -> &str {
+        &self.module
+    }
+
+    pub fn get_date_str(&self) -> String {
+        self.date.format("%Y-%m-%d").to_string()
+    }
+
+    pub fn get_time_start(&self) -> &str {
+        &self.start
+    }
+
+    pub fn get_time_end(&self) -> &str {
+        &self.end
+    }
+
     pub fn set_student_present(&mut self, login: &str) -> bool {
         let student = match self.students.iter_mut().find(|s| s.get_login() == login) {
             Some(student) => student,
