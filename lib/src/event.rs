@@ -120,30 +120,11 @@ fn parse_time(json: &serde_json::Value, time: Time) -> Option<String> {
 }
 
 fn construct_event_url(json: &serde_json::Value) -> Option<String> {
-    let scolaryear = match json["scolaryear"].as_str() {
-        Some(scolaryear) => scolaryear.to_string(),
-        None => return None,
-    };
-
-    let codemodule = match json["codemodule"].as_str() {
-        Some(codemodule) => codemodule.to_string(),
-        None => return None,
-    };
-
-    let codeinstance = match json["codeinstance"].as_str() {
-        Some(codeinstance) => codeinstance.to_string(),
-        None => return None,
-    };
-
-    let codeacti = match json["codeacti"].as_str() {
-        Some(codeacti) => codeacti.to_string(),
-        None => return None,
-    };
-
-    let codeevent = match json["codeevent"].as_str() {
-        Some(codeevent) => codeevent.to_string(),
-        None => return None,
-    };
+    let scolaryear = json["scolaryear"].as_str()?;
+    let codemodule = json["codemodule"].as_str()?;
+    let codeinstance = json["codeinstance"].as_str()?;
+    let codeacti = json["codeacti"].as_str()?;
+    let codeevent = json["codeevent"].as_str()?;
 
     Some(format!("/module/{}/{}/{}/{}/{}", scolaryear, codemodule, codeinstance, codeacti, codeevent))
 }
