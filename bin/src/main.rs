@@ -34,10 +34,6 @@ fn main() {
             println!("items[{}][login]={}", i, student.get_login());
             println!("items[{}][present]={:?}", i, student.get_presence());
         }
-
-        match event.set_student_present("first.last@epitech.eu") {
-            true => (),
-            false => eprintln!("could not set user present\n"),
-        }
+        event.set_all_students_missing();
     }
 }

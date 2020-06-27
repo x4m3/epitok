@@ -38,13 +38,40 @@ impl Event {
         &self.end
     }
 
-    pub fn set_student_present(&mut self, login: &str) -> bool {
+    fn set_student_presence(&mut self, login: &str, presence: Presence) -> bool {
+        // find student with matching login
         let student = match self.students.iter_mut().find(|s| s.get_login() == login) {
             Some(student) => student,
             None => return false,
         };
-        student.set_presence(Presence::Present);
+
+        // update student presence
+        student.set_presence(presence);
         true
+    }
+
+    pub fn set_student_present(&mut self, login: &str) -> bool {
+        self.set_student_presence(login, Presence::Present)
+    }
+
+    pub fn set_student_missing(&mut self, login: &str) -> bool {
+        self.set_student_presence(login, Presence::Missing)
+    }
+
+    fn set_all_students_presence(&mut self, presence: Presence) {
+        let students = self.students.iter_mut();
+
+        for student in students {
+            student.set_presence(presence);
+        }
+    }
+
+    pub fn set_all_students_present(&mut self) {
+        self.set_all_students_presence(Presence::Present);
+    }
+
+    pub fn set_all_students_missing(&mut self) {
+        self.set_all_students_presence(Presence::Missing);
     }
 }
 

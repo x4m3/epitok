@@ -1,7 +1,7 @@
 use std::{error, fmt};
 use crate::intra;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Presence {
     // there is no status yet
     None,
