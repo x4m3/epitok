@@ -73,6 +73,13 @@ impl Event {
     pub fn set_all_students_missing(&mut self) {
         self.set_all_students_presence(Presence::Missing);
     }
+
+    pub fn update_students(&self) -> bool {
+        // converts to intra format
+        // upload
+        // check intra reply
+        true
+    }
 }
 
 #[derive(Debug)]
