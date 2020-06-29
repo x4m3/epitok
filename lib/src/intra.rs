@@ -1,4 +1,5 @@
 use std::{error, fmt};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum Error {
@@ -86,13 +87,11 @@ pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
     };
 }
 
-pub fn update_presences(autologin: &str, code_event: &str) -> Result<(), Error> {
-    let url = format!("{}{}/updateregistered?format=json", autologin, code_event);
+pub fn update_presences(autologin: &str, code_event: &str, students: HashMap<String, String>) -> Result<(), Error> {
     let client = reqwest::blocking::Client::new();
+    let url = format!("{}{}/updateregistered?format=json", autologin, code_event);
 
-    let res = client.post(&url)
-        // .form(&params)
-        .send();
+    let req = client.post(&url).form(&students).send();
 
     Ok(())
 }

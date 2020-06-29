@@ -1,4 +1,5 @@
 use std::{error, fmt};
+use std::collections::HashMap;
 use crate::intra;
 use crate::student::{Student, fetch_students, Presence};
 
@@ -85,10 +86,33 @@ impl Event {
         }
     }
 
-    pub fn update_students(&self, autologin: &str) -> Result<(), Error> {
-        // serialize to intra format
+    fn export_students(&self) -> HashMap<String, String> {
+        let mut hm = HashMap::new();
+
+        for (i, student) in self.students.iter().enumerate() {
+            // student login
+            let login_k = format!("items[{}][login]", i);
+            let login_v = student.get_login().to_string();
+            hm.insert(login_k, login_v);
+
+            // student presence value
+            let presence_k = format!("items[{}][present]", i);
+            let presence_v = student.get_presence().to_string();
+            hm.insert(presence_k, presence_v);
+        }
+        hm
+    }
+
+    pub fn update_students(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
+        // make sure every student has a valid status
+        self.set_remaining_students_missing();
+
+        // export students to intra format
+        let students = self.export_students();
+
         // upload
-        intra::update_presences(autologin, self.get_code());
+        intra::update_presences(autologin, self.get_code(), students)?;
+
         // check intra reply
         Ok(())
     }
