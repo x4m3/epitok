@@ -74,11 +74,23 @@ impl Event {
         self.set_all_students_presence(Presence::Missing);
     }
 
-    pub fn update_students(&self) -> bool {
-        // converts to intra format
+    pub fn set_remaining_students_missing(&mut self) {
+        let students = self.students.iter_mut();
+
+        for student in students {
+            match student.get_presence() {
+                Presence::None => student.set_presence(Presence::Missing),
+                _ => (),
+            }
+        }
+    }
+
+    pub fn update_students(&self, autologin: &str) -> Result<(), Error> {
+        // serialize to intra format
         // upload
+        intra::update_presences(autologin, self.get_code());
         // check intra reply
-        true
+        Ok(())
     }
 }
 
