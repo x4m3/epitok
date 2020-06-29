@@ -85,3 +85,14 @@ pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
         }
     };
 }
+
+pub fn update_presences(autologin: &str, code_event: &str) -> Result<(), Error> {
+    let url = format!("{}{}/updateregistered?format=json", autologin, code_event);
+    let client = reqwest::blocking::Client::new();
+
+    let res = client.post(&url)
+        // .form(&params)
+        .send();
+
+    Ok(())
+}

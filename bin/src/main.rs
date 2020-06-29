@@ -17,7 +17,7 @@ fn main() {
     };
     print(&user);
 
-    let mut today_events = match event::list_events(user.get_autologin(), "2020-06-15") {
+    let mut today_events = match event::list_events(user.get_autologin(), "2020-06-29") {
         Ok(events) => events,
         Err(e) => {
             println!("could not get events: {}", e);
@@ -25,15 +25,15 @@ fn main() {
         }
     };
 
-    let event = &mut today_events[1];
+    let event = &mut today_events[0];
     println!("url: {} --- {} --- {}", event.get_code(), event.get_title(), event.get_module());
     for (i, student) in event.students.iter().enumerate() {
         println!("items[{}][login]={}", i, student.get_login());
         println!("items[{}][present]={:?}", i, student.get_presence());
     }
-    event.set_all_students_missing();
-    match event.update_students() {
-        true => (),
-        false => eprintln!("failed to update the students in {}", event.get_title()),
+
+    match event.update_students(user.get_autologin()) {
+        Ok(()) => (),
+        Err(e) => eprintln!("{}", e),
     }
 }
