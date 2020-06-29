@@ -15,6 +15,19 @@ pub enum Presence {
     Failed,
 }
 
+impl fmt::Display for Presence {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let message = match *self {
+            Presence::None => "",
+            Presence::Present => "present",
+            Presence::Missing => "absent",
+            Presence::NotApplicable => "N/A",
+            Presence::Failed => "failed",
+        };
+        write!(f, "{}", message)
+    }
+}
+
 #[derive(Debug)]
 pub struct Student {
     login: String,
