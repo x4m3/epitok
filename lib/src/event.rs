@@ -59,6 +59,14 @@ impl Event {
         self.set_student_presence(login, Presence::Missing)
     }
 
+    pub fn set_student_none(&mut self, login: &str) -> bool {
+        self.set_student_presence(login, Presence::None)
+    }
+
+    pub fn set_student_not_applicable(&mut self, login: &str) -> bool {
+        self.set_student_presence(login, Presence::NotApplicable)
+    }
+
     fn set_all_students_presence(&mut self, presence: Presence) {
         let students = self.students.iter_mut();
 
@@ -75,15 +83,31 @@ impl Event {
         self.set_all_students_presence(Presence::Missing);
     }
 
-    pub fn set_remaining_students_missing(&mut self) {
+    pub fn set_all_students_none(&mut self) {
+        self.set_all_students_presence(Presence::None);
+    }
+
+    pub fn set_all_students_not_applicable(&mut self) {
+        self.set_all_students_presence(Presence::NotApplicable);
+    }
+
+    fn set_remaining_students_presence(&mut self, presence: Presence) {
         let students = self.students.iter_mut();
 
         for student in students {
             match student.get_presence() {
-                Presence::None => student.set_presence(Presence::Missing),
+                Presence::None => student.set_presence(presence),
                 _ => (),
             }
         }
+    }
+
+    pub fn set_remaining_students_present(&mut self) {
+        self.set_remaining_students_presence(Presence::Present)
+    }
+
+    pub fn set_remaining_students_missing(&mut self) {
+        self.set_remaining_students_presence(Presence::Missing)
     }
 
     fn export_students(&self) -> HashMap<String, String> {
