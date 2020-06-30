@@ -1,5 +1,5 @@
-use std::{error, fmt};
 use crate::intra;
+use std::{error, fmt};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Presence {
@@ -73,10 +73,12 @@ pub fn fetch_students(autologin: &str, event: &str) -> Result<Vec<Student>, Box<
 
     let json = match intra::get_array_obj(&url) {
         Ok(json) => json,
-        Err(e) => return match e {
-            intra::Error::Empty => Ok(Vec::new()), // return empty JSON array
-            _ => Err(e.into()), // return the error
-        },
+        Err(e) => {
+            return match e {
+                intra::Error::Empty => Ok(Vec::new()), // return empty JSON array
+                _ => Err(e.into()),                    // return the error
+            };
+        }
     };
 
     let mut list = Vec::new();

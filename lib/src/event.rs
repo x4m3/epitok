@@ -1,7 +1,7 @@
-use std::{error, fmt};
-use std::collections::HashMap;
 use crate::intra;
-use crate::student::{Student, fetch_students, Presence};
+use crate::student::{fetch_students, Presence, Student};
+use std::collections::HashMap;
+use std::{error, fmt};
 
 #[derive(Debug)]
 pub struct Event {
@@ -193,7 +193,10 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
     let codeacti = json["codeacti"].as_str()?;
     let codeevent = json["codeevent"].as_str()?;
 
-    Some(format!("/module/{}/{}/{}/{}/{}", scolaryear, codemodule, codeinstance, codeacti, codeevent))
+    Some(format!(
+        "/module/{}/{}/{}/{}/{}",
+        scolaryear, codemodule, codeinstance, codeacti, codeevent
+    ))
 }
 
 pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
@@ -202,14 +205,19 @@ pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dy
         Err(e) => return Err(e.into()),
     };
     let date_str = date.format("%Y-%m-%d").to_string();
-    let url = format!("{}/planning/load?format=json&start={}&end={}", autologin, date_str, date_str);
+    let url = format!(
+        "{}/planning/load?format=json&start={}&end={}",
+        autologin, date_str, date_str
+    );
 
     let json = match intra::get_array_obj(&url) {
         Ok(json) => json,
-        Err(e) => return match e {
-            intra::Error::Empty => Ok(Vec::new()), // return empty JSON array
-            _ => Err(e.into()), // return the error
-        },
+        Err(e) => {
+            return match e {
+                intra::Error::Empty => Ok(Vec::new()), // return empty JSON array
+                _ => Err(e.into()),                    // return the error
+            };
+        }
     };
 
     let mut list = Vec::new();

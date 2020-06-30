@@ -15,13 +15,14 @@ fn print_students(event: &event::Event) {
 }
 
 fn main() {
-    let user = match Auth::new("https://intra.epitech.eu/auth-") {
-        Ok(user) => user,
-        Err(e) => {
-            println!("could not login: {}", e);
-            return;
-        }
-    };
+    let user =
+        match Auth::new("https://intra.epitech.eu/auth-") {
+            Ok(user) => user,
+            Err(e) => {
+                println!("could not login: {}", e);
+                return;
+            }
+        };
     print(&user);
 
     let mut today_events = match event::list_events(user.get_autologin(), "2020-06-30") {
@@ -33,7 +34,12 @@ fn main() {
     };
 
     let event = &mut today_events[0];
-    println!("url: {} --- {} --- {}", event.get_code(), event.get_title(), event.get_module());
+    println!(
+        "url: {} --- {} --- {}",
+        event.get_code(),
+        event.get_title(),
+        event.get_module()
+    );
 
     print_students(event);
     event.set_all_students_present();
