@@ -7,6 +7,13 @@ fn print(user: &Auth) {
     println!();
 }
 
+fn print_students(event: &event::Event) {
+    for student in event.students.iter() {
+        println!("{} - {}", student.get_login(), student.get_presence());
+    }
+    println!();
+}
+
 fn main() {
     let user = match Auth::new("https://intra.epitech.eu/auth-") {
         Ok(user) => user,
@@ -28,16 +35,9 @@ fn main() {
     let event = &mut today_events[0];
     println!("url: {} --- {} --- {}", event.get_code(), event.get_title(), event.get_module());
 
-    for student in event.students.iter() {
-        println!("{} - {}", student.get_login(), student.get_presence());
-    }
-
-    println!();
+    print_students(event);
     event.set_all_students_present();
-
-    for student in event.students.iter() {
-        println!("{} - {}", student.get_login(), student.get_presence());
-    }
+    print_students(event);
 
     match event.update_students(user.get_autologin()) {
         Ok(()) => (),
