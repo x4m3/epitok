@@ -1,5 +1,5 @@
-use std::{error, fmt};
 use crate::intra;
+use std::{error, fmt};
 
 #[derive(Debug)]
 pub enum Error {
