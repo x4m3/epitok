@@ -46,13 +46,13 @@ fn request(url: &str) -> Result<String, Error> {
     }
 
     // get request's content
-    return match intra_req.text() {
+    match intra_req.text() {
         Ok(raw) => Ok(raw),
         Err(e) => {
             println!("{}", e);
             Err(Error::Parsing)
         }
-    };
+    }
 }
 
 pub fn get_obj(url: &str) -> Result<serde_json::Value, Error> {
@@ -62,13 +62,13 @@ pub fn get_obj(url: &str) -> Result<serde_json::Value, Error> {
     };
 
     // parse json object
-    return match serde_json::from_str(&intra_request) {
+    match serde_json::from_str(&intra_request) {
         Ok(json) => Ok(json),
         Err(e) => {
             println!("{}", e);
             Err(Error::Parsing)
         }
-    };
+    }
 }
 
 pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
@@ -78,13 +78,13 @@ pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
     };
 
     // parse json array of objects
-    return match serde_json::from_str(&intra_request) {
+    match serde_json::from_str(&intra_request) {
         Ok(json) => Ok(json),
         Err(e) => {
             println!("{}", e);
             Err(Error::Empty) // Return Error::empty if there is nothing in the object
         }
-    };
+    }
 }
 
 pub fn update_presences(

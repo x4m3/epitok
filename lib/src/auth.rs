@@ -27,7 +27,7 @@ pub struct Auth {
 impl Auth {
     pub fn new(autologin: &str) -> Result<Auth, Box<dyn error::Error>> {
         // check autologin
-        if Auth::check_autologin(autologin) == false {
+        if !Auth::check_autologin(autologin) {
             return Err(Error::Credentials.into());
         }
 
@@ -39,7 +39,7 @@ impl Auth {
 
         let user = Auth {
             autologin: autologin.to_string(),
-            login: login.to_string(),
+            login,
         };
 
         Ok(user)

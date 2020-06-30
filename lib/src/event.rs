@@ -95,9 +95,8 @@ impl Event {
         let students = self.students.iter_mut();
 
         for student in students {
-            match student.get_presence() {
-                Presence::None => student.set_presence(presence),
-                _ => (),
+            if let Presence::None = student.get_presence() {
+                student.set_presence(presence)
             }
         }
     }
@@ -177,13 +176,13 @@ fn parse_time(json: &serde_json::Value, time: Time) -> Option<String> {
         Time::End => "end",
     };
 
-    return match json[time].as_str() {
+    match json[time].as_str() {
         Some(start) => match chrono::NaiveDateTime::parse_from_str(&start, "%Y-%m-%d %H:%M:%S") {
             Ok(start) => Some(start.format("%H:%M").to_string()),
             Err(_) => None,
         },
         None => None,
-    };
+    }
 }
 
 fn construct_event_url(json: &serde_json::Value) -> Option<String> {
@@ -247,7 +246,7 @@ pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dy
             None => return Err(Error::Module.into()),
         };
 
-        let date = date.clone();
+        let date = date;
 
         let start = match parse_time(&event, Time::Start) {
             Some(start) => start,
@@ -261,7 +260,7 @@ pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dy
         // fetch list of students registered to event
         let students = match fetch_students(autologin, &code) {
             Ok(students) => students,
-            Err(e) => return Err(e.into()),
+            Err(e) => return Err(e),
         };
 
         list.push(Event {
