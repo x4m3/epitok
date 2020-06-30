@@ -91,7 +91,23 @@ pub fn update_presences(autologin: &str, code_event: &str, students: HashMap<Str
     let client = reqwest::blocking::Client::new();
     let url = format!("{}{}/updateregistered?format=json", autologin, code_event);
 
-    let req = client.post(&url).form(&students).send();
+    let intra_req = match client.post(&url).form(&students).send() {
+        Ok(req) => req,
+        Err(e) => {
+            println!("{}", e);
+            return Err(Error::Network);
+        }
+    };
+
+    // user does not have access (bad autologin for example)
+    if intra_req.status() == reqwest::StatusCode::FORBIDDEN {
+        return Err(Error::AccessDenied);
+    }
+
+    // intra is probably down or there is an unexpected error
+    if intra_req.status() != reqwest::StatusCode::OK {
+        return Err(Error::IntraDown);
+    }
 
     Ok(())
 }

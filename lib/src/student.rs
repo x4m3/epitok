@@ -3,22 +3,17 @@ use crate::intra;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Presence {
-    // there is no status yet
     None,
-    // "present"
     Present,
-    // "absent"
     Missing,
-    // "N/A"
     NotApplicable,
-    // "failed"
     Failed,
 }
 
 impl fmt::Display for Presence {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match *self {
-            Presence::None => "",
+            Presence::None => "", // on the intra the json value is `null`
             Presence::Present => "present",
             Presence::Missing => "absent",
             Presence::NotApplicable => "N/A",
