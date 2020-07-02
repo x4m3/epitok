@@ -1,44 +1,68 @@
+//! # Events
+//!
+//! Event handling
+
 use crate::intra;
 use crate::student::{fetch_students, Presence, Student};
 use std::collections::HashMap;
 use std::{error, fmt};
 
 #[derive(Debug)]
+/// Event information
 pub struct Event {
+    /// URL code of the event (aka the event ID in the intra)
     code: String,
+    /// Name of the event
     title: String,
+    /// Module of the event (for clarity)
     module: String,
+    /// Date of the event
     date: chrono::NaiveDate,
+    /// When event starts
     start: String,
+    /// When event ends
     end: String,
+    /// Registered students
     pub students: Vec<Student>,
 }
 
 impl Event {
+    /// Get URL code
     pub fn get_code(&self) -> &str {
         &self.code
     }
 
+    /// Get name
     pub fn get_title(&self) -> &str {
         &self.title
     }
 
+    /// Get module name
     pub fn get_module(&self) -> &str {
         &self.module
     }
 
+    /// Get date as a string
     pub fn get_date_str(&self) -> String {
         self.date.format("%Y-%m-%d").to_string()
     }
 
+    /// Get start time as string
     pub fn get_time_start(&self) -> &str {
         &self.start
     }
 
+    /// Get finish time as string
     pub fn get_time_end(&self) -> &str {
         &self.end
     }
 
+    /// Set presence type of a student
+    ///
+    /// # Arguments
+    ///
+    /// * `login` - Student email address
+    /// * `presence` - Type of presence to set
     fn set_student_presence(&mut self, login: &str, presence: Presence) -> bool {
         // find student with matching login
         let student = match self.students.iter_mut().find(|s| s.get_login() == login) {
@@ -51,18 +75,58 @@ impl Event {
         true
     }
 
+    /// Set student present
+    ///
+    /// # Arguments
+    ///
+    /// * `login` - Student email address
+    ///
+    /// # Return values
+    ///
+    /// * `true` - student has been set present
+    /// * `false` - login has not been found
     pub fn set_student_present(&mut self, login: &str) -> bool {
         self.set_student_presence(login, Presence::Present)
     }
 
+    /// Set student missing
+    ///
+    /// # Arguments
+    ///
+    /// * `login` - Student email address
+    ///
+    /// # Return values
+    ///
+    /// * `true` - student has been set missing
+    /// * `false` - login has not been found
     pub fn set_student_missing(&mut self, login: &str) -> bool {
         self.set_student_presence(login, Presence::Missing)
     }
 
+    /// Remove student presence
+    ///
+    /// # Arguments
+    ///
+    /// * `login` - Student email address
+    ///
+    /// # Return values
+    ///
+    /// * `true` - presence has been removed for student
+    /// * `false` - login has not been found
     pub fn set_student_none(&mut self, login: &str) -> bool {
         self.set_student_presence(login, Presence::None)
     }
 
+    /// Set student N/A
+    ///
+    /// # Arguments
+    ///
+    /// * `login` - Student email address
+    ///
+    /// # Return values
+    ///
+    /// * `true` - student presence has been set as N/A
+    /// * `false` - login has not been found
     pub fn set_student_not_applicable(&mut self, login: &str) -> bool {
         self.set_student_presence(login, Presence::NotApplicable)
     }
@@ -75,14 +139,17 @@ impl Event {
         }
     }
 
+    /// Set all students as present
     pub fn set_all_students_present(&mut self) {
         self.set_all_students_presence(Presence::Present);
     }
 
+    /// Set all students as missing
     pub fn set_all_students_missing(&mut self) {
         self.set_all_students_presence(Presence::Missing);
     }
 
+    /// Remove presences for all students
     pub fn set_all_students_none(&mut self) {
         self.set_all_students_presence(Presence::None);
     }
@@ -101,14 +168,17 @@ impl Event {
         }
     }
 
+    /// Set students who do not have a presence status as present
     pub fn set_remaining_students_present(&mut self) {
         self.set_remaining_students_presence(Presence::Present)
     }
 
+    /// Set students who do not have a presence status as missing
     pub fn set_remaining_students_missing(&mut self) {
         self.set_remaining_students_presence(Presence::Missing)
     }
 
+    /// Export registered students to intra format (to be uploaded)
     fn export_students(&self) -> HashMap<String, String> {
         let mut hm = HashMap::new();
 
@@ -126,6 +196,7 @@ impl Event {
         hm
     }
 
+    /// Update students presences to the intra (upload them)
     pub fn update_students(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
         // make sure every student has a valid status
         self.set_remaining_students_missing();

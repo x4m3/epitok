@@ -1,9 +1,16 @@
+//! # Intranet authentication
+//!
+//! Authentication to the Epitech intranet, using account's autologin link.
+
 use crate::intra;
 use std::{error, fmt};
 
 #[derive(Debug)]
+/// Error possibilities
 pub enum Error {
+    /// Invalid autologin link: it may have been revoked
     Credentials,
+    /// There is no email address associated with the account, should not be possible though
     NoLogin,
 }
 
@@ -19,12 +26,16 @@ impl fmt::Display for Error {
     }
 }
 
+/// Authentication information
 pub struct Auth {
+    /// User's autologin link
     autologin: String,
+    /// User's email address
     login: String,
 }
 
 impl Auth {
+    /// Sign-in with autologin link
     pub fn new(autologin: &str) -> Result<Auth, Box<dyn error::Error>> {
         // check autologin
         if !Auth::check_autologin(autologin) {
@@ -45,10 +56,12 @@ impl Auth {
         Ok(user)
     }
 
+    /// Retrieve autologin link
     pub fn get_autologin(&self) -> &str {
         &self.autologin
     }
 
+    /// Retrieve email address
     pub fn get_login(&self) -> &str {
         &self.login
     }

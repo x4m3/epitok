@@ -1,12 +1,22 @@
+//! # Intranet communication
+//!
+//! Communication to the Epitech intranet, to send and receive data
+
 use std::collections::HashMap;
 use std::{error, fmt};
 
 #[derive(Debug)]
+/// Error possibilities
 pub enum Error {
+    /// No network access
     Network,
+    /// Account does not have permission to access resource
     AccessDenied,
+    /// Can't access intranet (probably down)
     IntraDown,
+    /// Failed to parse JSON reply
     Parsing,
+    /// Empty JSON reply
     Empty,
 }
 
@@ -25,7 +35,8 @@ impl fmt::Display for Error {
     }
 }
 
-fn request(url: &str) -> Result<String, Error> {
+/// Make a request to get content from a URL
+fn get_content(url: &str) -> Result<String, Error> {
     // make network request to intra
     let intra_req = match reqwest::blocking::get(url) {
         Ok(body) => body,
@@ -55,8 +66,9 @@ fn request(url: &str) -> Result<String, Error> {
     }
 }
 
+/// Get JSON object from a URL
 pub fn get_obj(url: &str) -> Result<serde_json::Value, Error> {
-    let intra_request = match request(&url) {
+    let intra_request = match get_content(&url) {
         Ok(intra_request) => intra_request,
         Err(e) => return Err(e),
     };
@@ -71,8 +83,9 @@ pub fn get_obj(url: &str) -> Result<serde_json::Value, Error> {
     }
 }
 
+/// Get JSON array from a URL
 pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
-    let intra_request = match request(&url) {
+    let intra_request = match get_content(&url) {
         Ok(intra_request) => intra_request,
         Err(e) => return Err(e),
     };
@@ -87,6 +100,13 @@ pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
     }
 }
 
+/// Updates presence statuses of students for an event
+///
+/// # Arguments
+///
+/// * `autologin` - User autologin link
+/// * `code_event` - Url code of the event
+/// * `students` List of students and their presence status, made with `event.export_students`
 pub fn update_presences(
     autologin: &str,
     code_event: &str,
