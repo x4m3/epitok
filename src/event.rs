@@ -279,7 +279,7 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
     ))
 }
 
-/// List events of a particular date
+/// Show events of a particular date
 ///
 /// # Arguments
 ///
@@ -291,15 +291,15 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 /// Get a vector of events from a particular date
 ///
 /// ```no_run
-/// use epitok::event;
+/// use epitok::event::list_events;
 ///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let date_str = "2020-07-01";
-/// let events_date = match event::list_events(user.get_autologin(), date_str) {
-///     Ok(events) => events,
-///     Err(e) => {
-///         println!("could not get events: {}", e);
-///     }
-/// };
+/// let autologin = "https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd";
+///
+/// let events_date = list_events(autologin, date_str)?;
+/// # Ok(())
+/// # }
 /// ```
 pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
     let date = match chrono::NaiveDate::parse_from_str(&raw_date, "%Y-%m-%d") {
