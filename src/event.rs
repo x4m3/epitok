@@ -288,7 +288,7 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 ///
 /// # Example
 ///
-/// Get a vector of events from a particular date
+/// Get a vector of events from a particular date and print their name
 ///
 /// ```no_run
 /// use epitok::event::list_events;
@@ -297,7 +297,10 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 /// let date_str = "2020-07-01";
 /// let autologin = "https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd";
 ///
-/// let events_date = list_events(autologin, date_str)?;
+/// let events = list_events(autologin, date_str)?;
+/// for event in events {
+///     println!("event: {} - {}", event.get_title(), event.get_module());
+/// }
 /// # Ok(())
 /// # }
 /// ```
