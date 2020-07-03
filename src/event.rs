@@ -16,8 +16,6 @@ pub struct Event {
     title: String,
     /// Module of the event (for clarity)
     module: String,
-    /// Date of the event
-    date: chrono::NaiveDate,
     /// When event starts
     start: String,
     /// When event ends
@@ -28,32 +26,27 @@ pub struct Event {
 
 impl Event {
     /// Get URL code
-    pub fn get_code(&self) -> &str {
+    pub fn code(&self) -> &str {
         &self.code
     }
 
     /// Get name
-    pub fn get_title(&self) -> &str {
+    pub fn title(&self) -> &str {
         &self.title
     }
 
     /// Get module name
-    pub fn get_module(&self) -> &str {
+    pub fn module(&self) -> &str {
         &self.module
     }
 
-    /// Get date as a string
-    pub fn get_date_str(&self) -> String {
-        self.date.format("%Y-%m-%d").to_string()
-    }
-
     /// Get start time as string
-    pub fn get_time_start(&self) -> &str {
+    pub fn start(&self) -> &str {
         &self.start
     }
 
     /// Get finish time as string
-    pub fn get_time_end(&self) -> &str {
+    pub fn end(&self) -> &str {
         &self.end
     }
 
@@ -154,6 +147,7 @@ impl Event {
         self.set_all_students_presence(Presence::None);
     }
 
+    /// Set presences for all students as Not applicable
     pub fn set_all_students_not_applicable(&mut self) {
         self.set_all_students_presence(Presence::NotApplicable);
     }
@@ -205,7 +199,7 @@ impl Event {
         let students = self.export_students();
 
         // upload
-        intra::update_presences(autologin, self.get_code(), students)?;
+        intra::update_presences(autologin, self.code(), students)?;
 
         // check intra reply
         Ok(())
@@ -221,8 +215,10 @@ pub enum Error {
     Title,
     /// Event is not linked to any modules
     Module,
-    /// Event does not have a starting time or finish time
-    Time(Time),
+    /// Event does not have a starting time
+    TimeStart,
+    /// Event does not have a finish time
+    TimeEnd,
 }
 
 impl error::Error for Error {}
@@ -233,8 +229,8 @@ impl fmt::Display for Error {
             Error::EventURL => "Event doesn't have a url (how is this even possible?)",
             Error::Title => "This event does not have a title",
             Error::Module => "This event does not belong to a module",
-            Error::Time(Time::Start) => "This event does not have a starting time",
-            Error::Time(Time::End) => "This event does not have a finish time",
+            Error::TimeStart => "This event does not have a starting time",
+            Error::TimeEnd => "This event does not have a finish time",
         };
         write!(f, "{}", message)
     }
@@ -242,7 +238,7 @@ impl fmt::Display for Error {
 
 #[derive(Debug)]
 /// Time representation
-pub enum Time {
+enum Time {
     /// Event start
     Start,
     /// Event end
@@ -299,20 +295,21 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 ///
 /// let events = list_events(autologin, date_str)?;
 /// for event in events {
-///     println!("event: {} - {}", event.get_title(), event.get_module());
+///     println!("event: {} - {}", event.title(), event.module());
 /// }
 /// # Ok(())
 /// # }
 /// ```
 pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
-    let date = match chrono::NaiveDate::parse_from_str(&raw_date, "%Y-%m-%d") {
-        Ok(date) => date,
+    // check if the date provided is valid
+    match chrono::NaiveDate::parse_from_str(&raw_date, "%Y-%m-%d") {
         Err(e) => return Err(e.into()),
-    };
-    let date_str = date.format("%Y-%m-%d").to_string();
+        _ => (),
+    }
+
     let url = format!(
         "{}/planning/load?format=json&start={}&end={}",
-        autologin, date_str, date_str
+        autologin, raw_date, raw_date
     );
 
     let json = match intra::get_array_obj(&url) {
@@ -352,15 +349,13 @@ pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dy
             None => return Err(Error::Module.into()),
         };
 
-        let date = date;
-
         let start = match parse_time(&event, Time::Start) {
             Some(start) => start,
-            None => return Err(Error::Time(Time::Start).into()),
+            None => return Err(Error::TimeStart.into()),
         };
         let end = match parse_time(&event, Time::End) {
             Some(end) => end,
-            None => return Err(Error::Time(Time::End).into()),
+            None => return Err(Error::TimeEnd.into()),
         };
 
         // fetch list of students registered to event
@@ -373,7 +368,6 @@ pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dy
             code,
             title,
             module,
-            date,
             start,
             end,
             students,

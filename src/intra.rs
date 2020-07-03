@@ -109,11 +109,11 @@ pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
 /// * `students` List of students and their presence status, made with `event.export_students`
 pub fn update_presences(
     autologin: &str,
-    code_event: &str,
+    event_code: &str,
     students: HashMap<String, String>,
 ) -> Result<(), Error> {
     let client = reqwest::blocking::Client::new();
-    let url = format!("{}{}/updateregistered?format=json", autologin, code_event);
+    let url = format!("{}{}/updateregistered?format=json", autologin, event_code);
 
     let intra_req = match client.post(&url).form(&students).send() {
         Ok(req) => req,
