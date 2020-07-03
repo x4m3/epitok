@@ -213,10 +213,15 @@ impl Event {
 }
 
 #[derive(Debug)]
+/// Error possibilities
 pub enum Error {
+    /// Event does not have a URL
     EventURL,
+    /// Event does not have a title
     Title,
+    /// Event is not linked to any modules
     Module,
+    /// Event does not have a starting time or finish time
     Time(Time),
 }
 
@@ -236,11 +241,15 @@ impl fmt::Display for Error {
 }
 
 #[derive(Debug)]
+/// Time representation
 pub enum Time {
+    /// Event start
     Start,
+    /// Event end
     End,
 }
 
+/// Parse start or end time from JSON
 fn parse_time(json: &serde_json::Value, time: Time) -> Option<String> {
     let time = match time {
         Time::Start => "start",
@@ -256,6 +265,7 @@ fn parse_time(json: &serde_json::Value, time: Time) -> Option<String> {
     }
 }
 
+/// Construct the URL for the event based on the intra information
 fn construct_event_url(json: &serde_json::Value) -> Option<String> {
     let scolaryear = json["scolaryear"].as_str()?;
     let codemodule = json["codemodule"].as_str()?;
@@ -269,6 +279,7 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
     ))
 }
 
+/// List events of a particular date
 pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
     let date = match chrono::NaiveDate::parse_from_str(&raw_date, "%Y-%m-%d") {
         Ok(date) => date,
