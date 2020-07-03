@@ -1,4 +1,4 @@
-//! # Student
+//! # Student handling
 //!
 //! Student handling
 
@@ -91,7 +91,6 @@ impl fmt::Display for Error {
 }
 
 /// Get list of students with their presence statutes
-// TODO: does this need to be public? maybe refactor
 pub fn fetch_students(autologin: &str, event: &str) -> Result<Vec<Student>, Box<dyn error::Error>> {
     let url = format!("{}{}/registered?format=json", autologin, event);
 

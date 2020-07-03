@@ -15,8 +15,8 @@
 
 // internal modules
 mod intra;
+mod student;
 
 // public modules
 pub mod auth;
 pub mod event;
-pub mod student;

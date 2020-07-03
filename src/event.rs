@@ -1,4 +1,4 @@
-//! # Events
+//! # Event management
 //!
 //! Event handling
 
