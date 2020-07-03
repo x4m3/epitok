@@ -8,7 +8,9 @@ use std::collections::HashMap;
 use std::{error, fmt};
 
 #[derive(Debug)]
-/// Event information
+/// # Event
+///
+/// Information about an event
 pub struct Event {
     /// URL code of the event (aka the event ID in the intra)
     code: String,
@@ -21,11 +23,15 @@ pub struct Event {
     /// When event ends
     end: String,
     /// Registered students
-    pub students: Vec<Student>,
+    students: Vec<Student>,
 }
 
 impl Event {
     /// Get URL code
+    ///
+    /// # Output format
+    ///
+    /// `/module/2019/X-XXX-000/XXX-0-0/acti-000000/event-000000`
     pub fn code(&self) -> &str {
         &self.code
     }
@@ -40,14 +46,19 @@ impl Event {
         &self.module
     }
 
-    /// Get start time as string
+    /// Get start time in `HH:MM` format
     pub fn start(&self) -> &str {
         &self.start
     }
 
-    /// Get finish time as string
+    /// Get finish time in `HH:MM` format
     pub fn end(&self) -> &str {
         &self.end
+    }
+
+    /// Get list of students
+    pub fn students(&self) -> &Vec<Student> {
+        &self.students
     }
 
     /// Set presence type of a student
@@ -73,11 +84,6 @@ impl Event {
     /// # Arguments
     ///
     /// * `login` - Student email address
-    ///
-    /// # Return values
-    ///
-    /// * `true` - student has been set present
-    /// * `false` - login has not been found
     pub fn set_student_present(&mut self, login: &str) -> bool {
         self.set_student_presence(login, Presence::Present)
     }
@@ -87,11 +93,6 @@ impl Event {
     /// # Arguments
     ///
     /// * `login` - Student email address
-    ///
-    /// # Return values
-    ///
-    /// * `true` - student has been set missing
-    /// * `false` - login has not been found
     pub fn set_student_missing(&mut self, login: &str) -> bool {
         self.set_student_presence(login, Presence::Missing)
     }
@@ -101,11 +102,6 @@ impl Event {
     /// # Arguments
     ///
     /// * `login` - Student email address
-    ///
-    /// # Return values
-    ///
-    /// * `true` - presence has been removed for student
-    /// * `false` - login has not been found
     pub fn set_student_none(&mut self, login: &str) -> bool {
         self.set_student_presence(login, Presence::None)
     }
@@ -115,11 +111,6 @@ impl Event {
     /// # Arguments
     ///
     /// * `login` - Student email address
-    ///
-    /// # Return values
-    ///
-    /// * `true` - student presence has been set as N/A
-    /// * `false` - login has not been found
     pub fn set_student_not_applicable(&mut self, login: &str) -> bool {
         self.set_student_presence(login, Presence::NotApplicable)
     }
@@ -280,7 +271,7 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 /// # Arguments
 ///
 /// * `autologin` - User autologin link
-/// * `raw_date` - Date formatted in "YYYY-MM-DD"
+/// * `raw_date` - Date in `YYYY-MM-DD` format
 ///
 /// # Example
 ///
