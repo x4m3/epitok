@@ -1,12 +1,22 @@
+//! # Student
+//!
+//! Student handling
+
 use crate::intra;
 use std::{error, fmt};
 
 #[derive(Debug, Clone, Copy)]
+/// Presence options for students
 pub enum Presence {
+    /// Student does not have a status yet
     None,
+    /// Student was here
     Present,
+    /// Student was not here
     Missing,
+    /// Student can't be here
     NotApplicable,
+    /// Student tried to enter a token but failed to save it
     Failed,
 }
 
@@ -24,34 +34,46 @@ impl fmt::Display for Presence {
 }
 
 #[derive(Debug)]
+/// Student information
 pub struct Student {
+    /// Email address
     login: String,
+    /// Student name
     name: String,
+    /// Student presence status
     presence: Presence,
 }
 
 impl Student {
+    /// Get student's email address
     pub fn get_login(&self) -> &str {
         &self.login
     }
 
+    /// Get student's name
     pub fn get_name(&self) -> &str {
         &self.name
     }
 
+    /// Get student's presence
     pub fn get_presence(&self) -> &Presence {
         &self.presence
     }
 
+    /// Set student's presence
     pub fn set_presence(&mut self, presence: Presence) {
         self.presence = presence
     }
 }
 
 #[derive(Debug)]
+/// Error possibilities
 pub enum Error {
+    /// Student does not have an email address
     Login,
+    /// Student does not have a name
     Name,
+    /// Student has an unknown or invalid presence status
     InvalidPresence,
 }
 
@@ -68,6 +90,8 @@ impl fmt::Display for Error {
     }
 }
 
+/// Get list of students with their presence statutes
+// TODO: does this need to be public? maybe refactor
 pub fn fetch_students(autologin: &str, event: &str) -> Result<Vec<Student>, Box<dyn error::Error>> {
     let url = format!("{}{}/registered?format=json", autologin, event);
 
