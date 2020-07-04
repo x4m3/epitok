@@ -1,6 +1,48 @@
 //! # Event management
 //!
 //! Event handling
+//!
+//! Here you can get events, registered students with their statuses, you can modify and upload them back to the intra.
+//!
+//! ## Example
+//!
+//! ```no_run
+//! # use std::error::Error;
+//! use epitok::event;
+//!
+//! # fn main() -> Result<(), Box<dyn Error>> {
+//! let autologin = "https://intra.epitech.eu/auth-autologin";
+//!
+//! // Get list of events
+//! let mut events = event::list_events(autologin, "2020-07-04")?;
+//!
+//! // Select the first event
+//! let first_event = &mut events[0];
+//!
+//! // Print information about event
+//! println!("code: {}", first_event.code());
+//! println!("title: {}", first_event.title());
+//! println!("module: {}", first_event.module());
+//!
+//! // Reset status of all students
+//! first_event.set_all_students_none();
+//!
+//! // Modify presence status to some students
+//! first_event.set_student_present("first.last@epitech.eu");
+//! first_event.set_student_missing("anony.mous@epitech.eu");
+//! first_event.set_student_not_applicable("a.b@epitech.eu");
+//!
+//! // Upload changes to the intra
+//! first_event.save_changes(autologin)?;
+//!
+//! // Display new presence statuses
+//! for student in first_event.students().iter() {
+//!     println!("{} - {}", student.get_login(), student.get_presence());
+//! }
+//!
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::intra;
 use crate::student::{fetch_students, Presence, Student};
@@ -164,6 +206,7 @@ impl Event {
     }
 
     /// Export registered students to intra format (to be uploaded)
+    // TODO: intra format
     fn export_students(&self) -> HashMap<String, String> {
         let mut hm = HashMap::new();
 
@@ -181,18 +224,22 @@ impl Event {
         hm
     }
 
-    /// Update students presences to the intra (upload them)
-    pub fn update_students(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
+    /// Save changes to the intra (upload them)
+    ///
+    /// # Arguments
+    ///
+    /// * `autologin` - Autologin link. If you use the `epitok::auth::Auth` struct, use its `get_autologin` method
+    // TODO: tell why set_remaining_students_missing()
+    pub fn save_changes(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
         // make sure every student has a valid status
         self.set_remaining_students_missing();
 
         // export students to intra format
         let students = self.export_students();
 
-        // upload
+        // upload and check intra reply
         intra::update_presences(autologin, self.code(), students)?;
 
-        // check intra reply
         Ok(())
     }
 }

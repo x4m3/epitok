@@ -1,6 +1,22 @@
 //! # Intranet authentication
 //!
 //! Authentication to the Epitech intranet, using account's autologin link.
+//!
+//! ## Example
+//!
+//! ```no_run
+//! # use std::error::Error;
+//! use epitok::auth::Auth;
+//!
+//! # fn main() -> Result<(), Box<dyn Error>> {
+//! let autologin = "https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd";
+//! let user = Auth::new(autologin)?;
+//!
+//! println!("login     : {}", user.login());
+//! println!("autologin : {}", user.autologin());
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::intra;
 use std::{error, fmt};
@@ -26,7 +42,11 @@ impl fmt::Display for Error {
     }
 }
 
-/// Authentication information
+/// # Authentication
+///
+/// Authentication and identity verification to the intranet
+///
+/// You can use the library without this module, this is just an autologin storage and verifier
 pub struct Auth {
     /// User's autologin link
     autologin: String,
@@ -57,12 +77,12 @@ impl Auth {
     }
 
     /// Retrieve autologin link
-    pub fn get_autologin(&self) -> &str {
+    pub fn autologin(&self) -> &str {
         &self.autologin
     }
 
     /// Retrieve email address
-    pub fn get_login(&self) -> &str {
+    pub fn login(&self) -> &str {
         &self.login
     }
 

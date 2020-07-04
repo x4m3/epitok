@@ -1,12 +1,12 @@
 //! # Introduction
 //!
-//! This library is designed to remove the "tokens" in the Epitech school.
+//! This library is designed to simplify students' and school's staff lives by removing the "tokens" in the Epitech school.
 //!
-//! A token is a piece of paper given to students with a number on it to confirm their presence to an event.
-//! Then the students needs to enter their token on the intranet to confirm their presence.
-//! But often this piece of paper can be forgotten easily, and for every event new tokens have to be printed.
+//! A token is a piece of paper given to students with a number on it, used to verify their presence to a school event.
 //!
-//! The goal is to simplify students' and school's staff lives by not having to deal these tokens anymore.
+//! Tokens have to be entered on the school's intranet.
+//!
+//! But tokens are often forgotten or lost, and for every event new tokens have to be printed.
 //!
 //! ## Warning
 //!
@@ -15,8 +15,8 @@
 
 // internal modules
 mod intra;
-mod student;
 
 // public modules
 pub mod auth;
 pub mod event;
+pub mod student;

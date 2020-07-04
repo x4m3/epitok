@@ -1,11 +1,16 @@
-//! # Student handling
+//! # Student
 //!
 //! Student handling
+//!
+//! As a user of this library you should not need to use the contents of this module,
+//! they are used in internal modules of the library.
 
 use crate::intra;
 use std::{error, fmt};
 
 #[derive(Debug, Clone, Copy)]
+/// # Presence
+///
 /// Presence options for students
 pub enum Presence {
     /// Student does not have a status yet
@@ -17,6 +22,9 @@ pub enum Presence {
     /// Student can't be here
     NotApplicable,
     /// Student tried to enter a token but failed to save it
+    ///
+    /// # Note
+    /// This value is not used in this library but it can be possible
     Failed,
 }
 
@@ -34,7 +42,9 @@ impl fmt::Display for Presence {
 }
 
 #[derive(Debug)]
-/// Student information
+/// # Student
+///
+/// Information about a student in an event
 pub struct Student {
     /// Email address
     login: String,
@@ -90,9 +100,9 @@ impl fmt::Display for Error {
     }
 }
 
-/// Get list of students with their presence statutes
-pub fn fetch_students(autologin: &str, event: &str) -> Result<Vec<Student>, Box<dyn error::Error>> {
-    let url = format!("{}{}/registered?format=json", autologin, event);
+/// Get list of students from an event
+pub fn fetch_students(autologin: &str, event_code: &str) -> Result<Vec<Student>, Box<dyn error::Error>> {
+    let url = format!("{}{}/registered?format=json", autologin, event_code);
 
     let json = match intra::get_array_obj(&url) {
         Ok(json) => json,
