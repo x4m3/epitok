@@ -206,7 +206,15 @@ impl Event {
     }
 
     /// Export registered students to intra format (to be uploaded)
-    // TODO: intra format
+    ///
+    /// The intra API uses `url-encoded` forms as a format to upload students and their statuses:
+    /// - `items[x][login]=first.last@epitech.eu`
+    /// - `items[x][present]=presence`
+    ///
+    /// where
+    /// - `x` is the position of the student in the array
+    /// - `first.last@epitech.eu` is the email of the student
+    /// - `presence` is the presence status of the student (see `student::Presence` for more information)
     fn export_students(&self) -> HashMap<String, String> {
         let mut hm = HashMap::new();
 
@@ -229,7 +237,9 @@ impl Event {
     /// # Arguments
     ///
     /// * `autologin` - Autologin link. If you use the `epitok::auth::Auth` struct, use its `get_autologin` method
-    // TODO: tell why set_remaining_students_missing()
+    ///
+    /// # Note
+    /// Before saving changes, setting every student without a status as missing
     pub fn save_changes(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
         // make sure every student has a valid status
         self.set_remaining_students_missing();
