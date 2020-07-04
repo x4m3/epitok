@@ -340,9 +340,8 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 /// ```
 pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
     // check if the date provided is valid
-    match chrono::NaiveDate::parse_from_str(&raw_date, "%Y-%m-%d") {
-        Err(e) => return Err(e.into()),
-        _ => (),
+    if let Err(e) = chrono::NaiveDate::parse_from_str(&raw_date, "%Y-%m-%d") {
+        return Err(e.into());
     }
 
     let url = format!(

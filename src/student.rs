@@ -101,7 +101,10 @@ impl fmt::Display for Error {
 }
 
 /// Get list of students from an event
-pub fn fetch_students(autologin: &str, event_code: &str) -> Result<Vec<Student>, Box<dyn error::Error>> {
+pub fn fetch_students(
+    autologin: &str,
+    event_code: &str,
+) -> Result<Vec<Student>, Box<dyn error::Error>> {
     let url = format!("{}{}/registered?format=json", autologin, event_code);
 
     let json = match intra::get_array_obj(&url) {
