@@ -13,8 +13,8 @@
 //! # fn main() -> Result<(), Box<dyn Error>> {
 //! let autologin = "https://intra.epitech.eu/auth-autologin";
 //!
-//! // Get list of events
-//! let mut events = event::list_events(autologin, "2020-07-04")?;
+//! // Get list of today's events
+//! let mut events = event::list_events_today(autologin)?;
 //!
 //! // Select the first event
 //! let first_event = &mut events[0];
@@ -422,4 +422,11 @@ pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dy
     }
 
     Ok(list)
+}
+
+/// Show today's events
+pub fn list_events_today(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
+    let date_str = chrono::Local::today().format("%Y-%m-%d").to_string();
+
+    list_events(autologin, &date_str)
 }
