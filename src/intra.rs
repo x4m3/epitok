@@ -93,10 +93,7 @@ pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
     // parse json array of objects
     match serde_json::from_str(&intra_request) {
         Ok(json) => Ok(json),
-        Err(e) => {
-            println!("{}", e);
-            Err(Error::Empty) // Return Error::empty if there is nothing in the object
-        }
+        Err(_) => Err(Error::Empty), // Return Error::empty if there is nothing in the object
     }
 }
 
