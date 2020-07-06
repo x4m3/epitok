@@ -238,12 +238,7 @@ impl Event {
     ///
     /// * `autologin` - Autologin link. If you use the `epitok::auth::Auth` struct, use its `get_autologin` method
     ///
-    /// # Note
-    /// Before saving changes, setting every student without a status as missing
     pub fn save_changes(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
-        // make sure every student has a valid status
-        self.set_remaining_students_missing();
-
         // export students to intra format
         let students = self.export_students();
 
