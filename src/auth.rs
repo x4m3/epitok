@@ -54,6 +54,7 @@ impl fmt::Display for Error {
 /// Authentication and identity verification to the intranet
 ///
 /// You can use the library without this module, this is just an autologin storage and verifier
+#[derive(Default)]
 pub struct Auth {
     /// User's autologin link
     autologin: Option<String>,
@@ -68,12 +69,13 @@ pub struct Auth {
 impl Auth {
     /// Create with empty fields
     pub fn new() -> Auth {
-        Auth {
-            autologin: None,
-            login: None,
-            name: None,
-            status: false,
-        }
+        Default::default()
+        // Auth {
+        //     autologin: None,
+        //     login: None,
+        //     name: None,
+        //     status: false,
+        // }
     }
 
     /// Sign-in with autologin link
