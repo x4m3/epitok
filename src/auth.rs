@@ -68,20 +68,14 @@ pub struct Auth {
 
 impl Auth {
     /// Create with empty fields
-    pub fn new() -> Auth {
+    pub fn new() -> Self {
         Default::default()
-        // Auth {
-        //     autologin: None,
-        //     login: None,
-        //     name: None,
-        //     status: false,
-        // }
     }
 
     /// Sign-in with autologin link
     pub fn sign_in(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
         // check autologin
-        if !Auth::check_autologin(autologin) {
+        if !Self::check_autologin(autologin) {
             return Err(Error::Credentials.into());
         }
 
