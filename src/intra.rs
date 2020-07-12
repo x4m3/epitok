@@ -12,6 +12,8 @@ pub enum Error {
     Network,
     /// Account does not have permission to access resource
     AccessDenied,
+    /// Page not found
+    NotFound,
     /// Can't access intranet (probably down)
     IntraDown,
     /// Failed to parse JSON reply
@@ -27,7 +29,8 @@ impl fmt::Display for Error {
         let message = match *self {
             Error::Network => "No internet access",
             Error::AccessDenied => "You do not have permission to access this resource",
-            Error::IntraDown => "Could not connect to the epitech intranet",
+            Error::NotFound => "Could not find page on the Epitech intranet",
+            Error::IntraDown => "Could not connect to the Epitech intranet",
             Error::Parsing => "Failed to parse retrieved data from the intranet",
             Error::Empty => "Empty JSON array",
         };
@@ -49,6 +52,11 @@ fn get_content(url: &str) -> Result<String, Error> {
     // user does not have access (bad autologin for example)
     if intra_req.status() == reqwest::StatusCode::FORBIDDEN {
         return Err(Error::AccessDenied);
+    }
+
+    // page not found
+    if intra_req.status() == reqwest::StatusCode::NOT_FOUND {
+        return Err(Error::NotFound);
     }
 
     // intra is probably down
