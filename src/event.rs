@@ -251,15 +251,6 @@ impl Event {
 }
 
 #[derive(Debug)]
-/// Success possibilities when getting events
-pub enum Success {
-    /// No events
-    NoEvents,
-    /// Number of retrieved events
-    Events(usize),
-}
-
-#[derive(Debug)]
 /// Error possibilities
 pub enum Error {
     /// Event does not have a URL
@@ -332,8 +323,14 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 ///
 /// # Arguments
 ///
+/// * `list` - Where events will be stored
 /// * `autologin` - User autologin link
 /// * `raw_date` - Date in `YYYY-MM-DD` format
+///
+/// # Return value
+/// On success the number of retrieved events will be returned.
+///
+/// On failure the error type will be returned
 ///
 /// # Example
 ///
@@ -358,7 +355,7 @@ pub fn list_events(
     list: &mut Vec<Event>,
     autologin: &Option<String>,
     raw_date: &str,
-) -> Result<Success, Box<dyn error::Error>> {
+) -> Result<usize, Box<dyn error::Error>> {
     // check if autologin is valid
     let autologin = match autologin {
         Some(autologin) => autologin,
@@ -384,8 +381,8 @@ pub fn list_events(
         Ok(json) => json,
         Err(e) => {
             return match e {
-                intra::Error::Empty => Ok(Success::NoEvents), // No events have been retrieved
-                _ => Err(e.into()),                           // Return the intra error
+                intra::Error::Empty => Ok(0), // No events have been retrieved
+                _ => Err(e.into()),           // Return the intra error
             };
         }
     };
@@ -444,14 +441,14 @@ pub fn list_events(
         number_events += 1;
     }
 
-    Ok(Success::Events(number_events))
+    Ok(number_events)
 }
 
-/// Show today's events
+/// Get today's events
 pub fn list_events_today(
     list: &mut Vec<Event>,
     autologin: &Option<String>,
-) -> Result<Success, Box<dyn error::Error>> {
+) -> Result<usize, Box<dyn error::Error>> {
     let date_str = chrono::Local::today().format("%Y-%m-%d").to_string();
 
     list_events(list, autologin, &date_str)
