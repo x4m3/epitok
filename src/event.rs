@@ -8,13 +8,14 @@
 //!
 //! ```no_run
 //! # use std::error::Error;
-//! use epitok::event;
+//! use epitok::event::{Event, list_events_today};
 //!
 //! # fn main() -> Result<(), Box<dyn Error>> {
-//! let autologin = "https://intra.epitech.eu/auth-autologin";
+//! let autologin = Some("https://intra.epitech.eu/auth-autologin".to_string());
+//! let mut events : Vec<Event> = Vec::new();
 //!
 //! // Get list of today's events
-//! let mut events = event::list_events_today(autologin)?;
+//! list_events_today(&mut events, &autologin)?;
 //!
 //! // Select the first event
 //! let first_event = &mut events[0];
@@ -33,7 +34,7 @@
 //! first_event.set_student_not_applicable("a.b@epitech.eu");
 //!
 //! // Upload changes to the intra
-//! first_event.save_changes(autologin)?;
+//! first_event.save_changes(autologin.unwrap().as_str())?;
 //!
 //! // Display new presence statuses
 //! for student in first_event.students().iter() {
@@ -250,6 +251,15 @@ impl Event {
 }
 
 #[derive(Debug)]
+/// Success possibilities when getting events
+pub enum Success {
+    /// No events
+    NoEvents,
+    /// Number of retrieved events
+    Events(usize),
+}
+
+#[derive(Debug)]
 /// Error possibilities
 pub enum Error {
     /// Event does not have a URL
@@ -269,7 +279,7 @@ impl error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match *self {
-            Error::EventURL => "Event doesn't have a url (how is this even possible?)",
+            Error::EventURL => "This event doesn't have a url",
             Error::Title => "This event does not have a title",
             Error::Module => "This event does not belong to a module",
             Error::TimeStart => "This event does not have a starting time",
@@ -330,23 +340,39 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 /// Get a vector of events from a particular date and print their name
 ///
 /// ```no_run
-/// use epitok::event::list_events;
+/// use epitok::event::{Event, list_events};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let date_str = "2020-07-01";
-/// let autologin = "https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd";
+/// let autologin = Some("https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd".to_string());
+/// let mut events: Vec<Event> = Vec::new();
 ///
-/// let events = list_events(autologin, date_str)?;
+/// list_events(&mut events, &autologin, date_str)?;
 /// for event in events {
 ///     println!("event: {} - {}", event.title(), event.module());
 /// }
 /// # Ok(())
 /// # }
 /// ```
-pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
+pub fn list_events(
+    list: &mut Vec<Event>,
+    autologin: &Option<String>,
+    raw_date: &str,
+) -> Result<Success, Box<dyn error::Error>> {
+    // check if autologin is valid
+    let autologin = match autologin {
+        Some(autologin) => autologin,
+        None => return Err(crate::auth::Error::NotSignedIn.into()),
+    };
+
     // check if the date provided is valid
     if let Err(e) = chrono::NaiveDate::parse_from_str(&raw_date, "%Y-%m-%d") {
         return Err(e.into());
+    }
+
+    // clear vector if it's not empty
+    if !list.is_empty() {
+        list.clear();
     }
 
     let url = format!(
@@ -358,20 +384,20 @@ pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dy
         Ok(json) => json,
         Err(e) => {
             return match e {
-                intra::Error::Empty => Ok(Vec::new()), // return empty JSON array
-                _ => Err(e.into()),                    // return the error
+                intra::Error::Empty => Ok(Success::NoEvents), // No events have been retrieved
+                _ => Err(e.into()),                           // Return the intra error
             };
         }
     };
 
-    let mut list = Vec::new();
+    let mut number_events = 0;
 
     for event in &json {
         // check if this event can have tokens
         match event["is_rdv"].as_str() {
             Some(is_rdv) => match is_rdv {
                 "0" => (),
-                _ => continue, // iterate over next event, skip this one
+                _ => continue, // Iterate over next event, skip this one
             },
             None => continue,
         };
@@ -414,14 +440,19 @@ pub fn list_events(autologin: &str, raw_date: &str) -> Result<Vec<Event>, Box<dy
             end,
             students,
         });
+
+        number_events += 1;
     }
 
-    Ok(list)
+    Ok(Success::Events(number_events))
 }
 
 /// Show today's events
-pub fn list_events_today(autologin: &str) -> Result<Vec<Event>, Box<dyn error::Error>> {
+pub fn list_events_today(
+    list: &mut Vec<Event>,
+    autologin: &Option<String>,
+) -> Result<Success, Box<dyn error::Error>> {
     let date_str = chrono::Local::today().format("%Y-%m-%d").to_string();
 
-    list_events(autologin, &date_str)
+    list_events(list, autologin, &date_str)
 }
