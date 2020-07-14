@@ -28,6 +28,8 @@ use std::{error, fmt};
 #[derive(Debug)]
 /// Error possibilities
 pub enum Error {
+    /// Not signed in
+    NotSignedIn,
     /// Invalid autologin link: it may have been revoked
     Credentials,
     /// There is no email address associated with the account, should not be possible though
@@ -41,6 +43,7 @@ impl error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match *self {
+            Error::NotSignedIn => "You are not signed in",
             Error::Credentials => "Invalid autologin link provided",
             Error::NoLogin => "No login associated with intranet profile",
             Error::NoName => "No name associated with intranet profile",
