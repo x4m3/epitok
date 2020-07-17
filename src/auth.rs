@@ -28,6 +28,8 @@ use std::{error, fmt};
 #[derive(Debug)]
 /// Error possibilities
 pub enum Error {
+    /// Intra error
+    IntraError(intra::Error),
     /// Not signed in
     NotSignedIn,
     /// Invalid autologin link: it may have been revoked
@@ -42,13 +44,35 @@ impl error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let message = match *self {
-            Error::NotSignedIn => "You are not signed in",
-            Error::Credentials => "Invalid autologin link provided",
-            Error::NoLogin => "No login associated with intranet profile",
-            Error::NoName => "No name associated with intranet profile",
+        let message: String = match *self {
+            Error::IntraError(intra::Error::Network) => intra::Error::Network.to_string(),
+            Error::IntraError(intra::Error::AccessDenied) => intra::Error::AccessDenied.to_string(),
+            Error::IntraError(intra::Error::NotFound) => intra::Error::NotFound.to_string(),
+            Error::IntraError(intra::Error::IntraDown) => intra::Error::IntraDown.to_string(),
+            Error::IntraError(intra::Error::Parsing) => intra::Error::Parsing.to_string(),
+            Error::IntraError(intra::Error::Empty) => intra::Error::Empty.to_string(),
+            Error::NotSignedIn => "You are not signed in".into(),
+            Error::Credentials => "Invalid autologin link provided".into(),
+            Error::NoLogin => "No login associated with intranet profile".into(),
+            Error::NoName => "No name associated with intranet profile".into(),
         };
         write!(f, "{}", message)
+    }
+}
+
+/// Authentication status
+pub enum Status {
+    /// Signed in
+    SignedIn,
+    /// Signed out
+    SignedOut,
+    /// Could not sign in
+    Error(Error),
+}
+
+impl Default for Status {
+    fn default() -> Self {
+        Status::SignedOut
     }
 }
 
@@ -66,7 +90,7 @@ pub struct Auth {
     /// User's name
     name: Option<String>,
     /// Status
-    status: bool,
+    status: Status,
 }
 
 impl Auth {
@@ -79,6 +103,7 @@ impl Auth {
     pub fn sign_in(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
         // check autologin
         if !Self::check_autologin(autologin) {
+            self.status = Status::Error(Error::Credentials);
             return Err(Error::Credentials.into());
         }
 
@@ -86,25 +111,34 @@ impl Auth {
 
         let json = match intra::get_obj(&url) {
             Ok(intra_request) => intra_request,
-            Err(e) => return Err(e.into()),
+            Err(e) => {
+                self.status = Status::Error(Error::IntraError(e));
+                return Err(e.into());
+            }
         };
 
         // get user's login
         let login = match json["login"].as_str() {
             Some(login) => login,
-            None => return Err(Error::NoLogin.into()),
+            None => {
+                self.status = Status::Error(Error::NoLogin);
+                return Err(Error::NoLogin.into());
+            }
         };
 
         // get user's name
         let name = match json["title"].as_str() {
             Some(name) => name,
-            None => return Err(Error::NoName.into()),
+            None => {
+                self.status = Status::Error(Error::NoName);
+                return Err(Error::NoName.into());
+            }
         };
 
         self.set_autologin(autologin);
         self.set_login(login);
         self.set_name(name);
-        self.status = true;
+        self.status = Status::SignedIn;
 
         Ok(())
     }
@@ -114,7 +148,7 @@ impl Auth {
         self.autologin = None;
         self.login = None;
         self.name = None;
-        self.status = false;
+        self.status = Status::SignedOut;
     }
 
     /// Retrieve autologin link
@@ -145,7 +179,7 @@ impl Auth {
     }
 
     /// Get current status
-    pub fn status(&self) -> &bool {
+    pub fn status(&self) -> &Status {
         &self.status
     }
 

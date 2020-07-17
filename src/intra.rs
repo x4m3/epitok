@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use std::{error, fmt};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 /// Error possibilities
 pub enum Error {
     /// No network access
