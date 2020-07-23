@@ -101,11 +101,14 @@ impl Auth {
 
     /// Sign-in with autologin link
     pub fn sign_in(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
-        // check autologin
+        // Check autologin
         if !Self::check_autologin(autologin) {
             self.status = Status::Error(Error::Credentials);
             return Err(Error::Credentials.into());
         }
+
+        // Store new autologin
+        self.set_autologin(autologin);
 
         let url = format!("{}/user?format=json", autologin);
 
@@ -135,7 +138,6 @@ impl Auth {
             }
         };
 
-        self.set_autologin(autologin);
         self.set_login(login);
         self.set_name(name);
         self.status = Status::SignedIn;
