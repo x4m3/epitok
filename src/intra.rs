@@ -44,7 +44,7 @@ fn get_content(url: &str) -> Result<String, Error> {
     let intra_req = match reqwest::blocking::get(url) {
         Ok(body) => body,
         Err(e) => {
-            println!("{}", e);
+            eprintln!("[epitok]: Network error: {}", e);
             return Err(Error::Network);
         }
     };
@@ -68,7 +68,7 @@ fn get_content(url: &str) -> Result<String, Error> {
     match intra_req.text() {
         Ok(raw) => Ok(raw),
         Err(e) => {
-            println!("{}", e);
+            eprintln!("[epitok] Parsing error: {}", e);
             Err(Error::Parsing)
         }
     }
@@ -85,7 +85,7 @@ pub fn get_obj(url: &str) -> Result<serde_json::Value, Error> {
     match serde_json::from_str(&intra_request) {
         Ok(json) => Ok(json),
         Err(e) => {
-            println!("{}", e);
+            eprintln!("[epitok] Parsing error: {}", e);
             Err(Error::Parsing)
         }
     }
@@ -123,7 +123,7 @@ pub fn update_presences(
     let intra_req = match client.post(&url).form(&students).send() {
         Ok(req) => req,
         Err(e) => {
-            println!("{}", e);
+            eprintln!("[epitok] Update presences error: {}", e);
             return Err(Error::Network);
         }
     };
