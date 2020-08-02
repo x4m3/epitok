@@ -100,8 +100,8 @@ impl Event {
     }
 
     /// Get list of students
-    pub fn students(&self) -> &Vec<Student> {
-        &self.students
+    pub fn students(&mut self) -> &mut Vec<Student> {
+        &mut self.students
     }
 
     /// Set presence type of a student
