@@ -7,17 +7,15 @@
 //! ```no_run
 //! use epitok::auth::Auth;
 //!
-//! # fn main() -> Result<(), ()> {
+//! # #[async_std::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let autologin = "https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd";
 //! let mut user = Auth::new();
-//! match user.sign_in(autologin) {
-//!     Ok(()) => (),
-//!     Err(e) => return Err(()),
-//! }
+//! user.sign_in(autologin).await?;
 //!
-//!     println!("autologin : {}", user.autologin().as_ref().unwrap());
-//!     println!("login     : {}", user.login().as_ref().unwrap());
-//!     println!("name      : {}", user.name().as_ref().unwrap());
+//! println!("autologin : {}", user.autologin().as_ref().unwrap());
+//! println!("login     : {}", user.login().as_ref().unwrap());
+//! println!("name      : {}", user.name().as_ref().unwrap());
 //! # Ok(())
 //! # }
 //! ```
@@ -100,7 +98,7 @@ impl Auth {
     }
 
     /// Sign-in with autologin link
-    pub fn sign_in(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
+    pub async fn sign_in(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
         // Check autologin
         if !Self::check_autologin(autologin) {
             self.status = Status::Error(Error::Credentials);
@@ -112,7 +110,7 @@ impl Auth {
 
         let url = format!("{}/user?format=json", autologin);
 
-        let json = match intra::get_obj(&url) {
+        let json = match intra::get_obj(&url).await {
             Ok(intra_request) => intra_request,
             Err(e) => {
                 self.status = Status::Error(Error::IntraError(e));

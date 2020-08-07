@@ -7,15 +7,15 @@
 //! ## Example
 //!
 //! ```no_run
-//! # use std::error::Error;
 //! use epitok::event::{Event, list_events_today};
 //!
-//! # fn main() -> Result<(), Box<dyn Error>> {
+//! # #[async_std::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let autologin = Some("https://intra.epitech.eu/auth-autologin".to_string());
-//! let mut events : Vec<Event> = Vec::new();
+//! let mut events: Vec<Event> = Vec::new();
 //!
 //! // Get list of today's events
-//! list_events_today(&mut events, &autologin)?;
+//! list_events_today(&mut events, &autologin).await?;
 //!
 //! // Select the first event
 //! let first_event = &mut events[0];
@@ -34,7 +34,7 @@
 //! first_event.set_student_not_applicable("a.b@epitech.eu");
 //!
 //! // Upload changes to the intra
-//! first_event.save_changes(autologin.unwrap().as_str())?;
+//! first_event.save_changes(autologin.unwrap().as_str()).await?;
 //!
 //! // Display new presence statuses
 //! for student in first_event.students().iter() {
@@ -239,12 +239,12 @@ impl Event {
     ///
     /// * `autologin` - Autologin link. If you use the `epitok::auth::Auth` struct, use its `get_autologin` method
     ///
-    pub fn save_changes(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
+    pub async fn save_changes(&mut self, autologin: &str) -> Result<(), Box<dyn error::Error>> {
         // export students to intra format
         let students = self.export_students();
 
         // upload and check intra reply
-        intra::update_presences(autologin, self.code(), students)?;
+        intra::update_presences(autologin, self.code(), students).await?;
 
         Ok(())
     }
@@ -339,19 +339,20 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 /// ```no_run
 /// use epitok::event::{Event, list_events};
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # #[async_std::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let date_str = "2020-07-01";
 /// let autologin = Some("https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd".to_string());
 /// let mut events: Vec<Event> = Vec::new();
 ///
-/// list_events(&mut events, &autologin, date_str)?;
+/// list_events(&mut events, &autologin, date_str).await?;
 /// for event in events {
 ///     println!("event: {} - {}", event.title(), event.module());
 /// }
 /// # Ok(())
 /// # }
 /// ```
-pub fn list_events(
+pub async fn list_events(
     list: &mut Vec<Event>,
     autologin: &Option<String>,
     raw_date: &str,
@@ -377,7 +378,7 @@ pub fn list_events(
         autologin, raw_date, raw_date
     );
 
-    let json = match intra::get_array_obj(&url) {
+    let json = match intra::get_array_obj(&url).await {
         Ok(json) => json,
         Err(e) => {
             return match e {
@@ -424,7 +425,7 @@ pub fn list_events(
         };
 
         // fetch list of students registered to event
-        let students = match fetch_students(autologin, &code) {
+        let students = match fetch_students(autologin, &code).await {
             Ok(students) => students,
             Err(e) => return Err(e),
         };
@@ -445,11 +446,11 @@ pub fn list_events(
 }
 
 /// Get today's events
-pub fn list_events_today(
+pub async fn list_events_today(
     list: &mut Vec<Event>,
     autologin: &Option<String>,
 ) -> Result<usize, Box<dyn error::Error>> {
     let date_str = chrono::Local::today().format("%Y-%m-%d").to_string();
 
-    list_events(list, autologin, &date_str)
+    list_events(list, autologin, &date_str).await
 }

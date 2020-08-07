@@ -39,9 +39,9 @@ impl fmt::Display for Error {
 }
 
 /// Make a request to get content from a URL
-fn get_content(url: &str) -> Result<String, Error> {
+async fn get_content(url: &str) -> Result<String, Error> {
     // make network request to intra
-    let intra_req = match reqwest::blocking::get(url) {
+    let intra_req = match reqwest::get(url).await {
         Ok(body) => body,
         Err(e) => {
             eprintln!("[epitok]: Network error: {}", e);
@@ -65,7 +65,7 @@ fn get_content(url: &str) -> Result<String, Error> {
     }
 
     // get request's content
-    match intra_req.text() {
+    match intra_req.text().await {
         Ok(raw) => Ok(raw),
         Err(e) => {
             eprintln!("[epitok] Parsing error: {}", e);
@@ -75,8 +75,8 @@ fn get_content(url: &str) -> Result<String, Error> {
 }
 
 /// Get JSON object from a URL
-pub fn get_obj(url: &str) -> Result<serde_json::Value, Error> {
-    let intra_request = match get_content(&url) {
+pub async fn get_obj(url: &str) -> Result<serde_json::Value, Error> {
+    let intra_request = match get_content(&url).await {
         Ok(intra_request) => intra_request,
         Err(e) => return Err(e),
     };
@@ -92,8 +92,8 @@ pub fn get_obj(url: &str) -> Result<serde_json::Value, Error> {
 }
 
 /// Get JSON array from a URL
-pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
-    let intra_request = match get_content(&url) {
+pub async fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
+    let intra_request = match get_content(&url).await {
         Ok(intra_request) => intra_request,
         Err(e) => return Err(e),
     };
@@ -112,15 +112,15 @@ pub fn get_array_obj(url: &str) -> Result<Vec<serde_json::Value>, Error> {
 /// * `autologin` - User autologin link
 /// * `code_event` - Url code of the event
 /// * `students` List of students and their presence status, made with `event.export_students`
-pub fn update_presences(
+pub async fn update_presences(
     autologin: &str,
     event_code: &str,
     students: HashMap<String, String>,
 ) -> Result<(), Error> {
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::Client::new();
     let url = format!("{}{}/updateregistered?format=json", autologin, event_code);
 
-    let intra_req = match client.post(&url).form(&students).send() {
+    let intra_req = match client.post(&url).form(&students).send().await {
         Ok(req) => req,
         Err(e) => {
             eprintln!("[epitok] Update presences error: {}", e);
