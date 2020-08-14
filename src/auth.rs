@@ -28,8 +28,6 @@ use std::{error, fmt};
 pub enum Error {
     /// Intra error
     IntraError(intra::Error),
-    /// Not signed in
-    NotSignedIn,
     /// Invalid autologin link: it may have been revoked
     Credentials,
     /// There is no email address associated with the account, should not be possible though
@@ -49,7 +47,6 @@ impl fmt::Display for Error {
             Error::IntraError(intra::Error::IntraDown) => intra::Error::IntraDown.to_string(),
             Error::IntraError(intra::Error::Parsing) => intra::Error::Parsing.to_string(),
             Error::IntraError(intra::Error::Empty) => intra::Error::Empty.to_string(),
-            Error::NotSignedIn => "You are not signed in".into(),
             Error::Credentials => "Invalid autologin link provided".into(),
             Error::NoLogin => "No login associated with intranet profile".into(),
             Error::NoName => "No name associated with intranet profile".into(),
