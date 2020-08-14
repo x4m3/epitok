@@ -34,7 +34,7 @@
 //! first_event.set_student_not_applicable("a.b@epitech.eu");
 //!
 //! // Upload changes to the intra
-//! first_event.save_changes(autologin.unwrap().as_str()).await?;
+//! first_event.save_changes(autologin).await?;
 //!
 //! // Display new presence statuses
 //! for student in first_event.students().iter() {
