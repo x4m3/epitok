@@ -57,6 +57,8 @@ use std::{error, fmt};
 pub struct Event {
     /// URL code of the event (aka the event ID in the intra)
     code: String,
+    /// URL of event on the intra (pretty page)
+    intra_page: String,
     /// Name of the event
     title: String,
     /// Module of the event (for clarity)
@@ -77,6 +79,15 @@ impl Event {
     /// `/module/2019/X-XXX-000/XXX-0-0/acti-000000/event-000000`
     pub fn code(&self) -> &str {
         &self.code
+    }
+
+    /// Get URL to intra pretty page
+    ///
+    /// # Output format
+    ///
+    /// `/module/2019/X-XXX-000/XXX-0-0/acti-000000`
+    pub fn intra_page(&self) -> &str {
+        &self.intra_page
     }
 
     /// Get name
@@ -306,17 +317,23 @@ fn parse_time(json: &serde_json::Value, time: Time) -> Option<String> {
 }
 
 /// Construct the URL for the event based on the intra information
-fn construct_event_url(json: &serde_json::Value) -> Option<String> {
-    let scolaryear = json["scolaryear"].as_str()?;
-    let codemodule = json["codemodule"].as_str()?;
-    let codeinstance = json["codeinstance"].as_str()?;
-    let codeacti = json["codeacti"].as_str()?;
-    let codeevent = json["codeevent"].as_str()?;
+///
+/// pretty: construct url for pretty page on the intra (not to be used with the api)
+fn construct_event_url(json: &serde_json::Value, pretty: bool) -> Option<String> {
+    let mut url = format!(
+        "/module/{}/{}/{}/{}",
+        json["scolaryear"].as_str()?,
+        json["codemodule"].as_str()?,
+        json["codeinstance"].as_str()?,
+        json["codeacti"].as_str()?
+    );
 
-    Some(format!(
-        "/module/{}/{}/{}/{}/{}",
-        scolaryear, codemodule, codeinstance, codeacti, codeevent
-    ))
+    if !pretty {
+        url.push_str("/");
+        url.push_str(json["codeevent"].as_str()?);
+    }
+
+    Some(url)
 }
 
 /// Show events of a particular date
@@ -394,8 +411,13 @@ pub async fn list_events(
             None => continue,
         };
 
-        let code = match construct_event_url(&event) {
+        let code = match construct_event_url(&event, false) {
             Some(code) => code,
+            None => return Err(Error::EventURL.into()),
+        };
+
+        let intra_page = match construct_event_url(&event, true) {
+            Some(intra_page) => intra_page,
             None => return Err(Error::EventURL.into()),
         };
 
@@ -426,6 +448,7 @@ pub async fn list_events(
 
         list.push(Event {
             code,
+            intra_page,
             title,
             module,
             start,
