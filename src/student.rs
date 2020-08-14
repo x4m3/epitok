@@ -102,22 +102,28 @@ impl fmt::Display for Error {
 
 /// Get list of students from an event
 pub async fn fetch_students(
+    list: &mut Vec<Student>,
     autologin: &str,
     event_code: &str,
-) -> Result<Vec<Student>, Box<dyn error::Error>> {
+) -> Result<usize, Box<dyn error::Error>> {
     let url = format!("{}{}/registered?format=json", autologin, event_code);
 
     let json = match intra::get_array_obj(&url).await {
         Ok(json) => json,
         Err(e) => {
             return match e {
-                intra::Error::Empty => Ok(Vec::new()), // return empty JSON array
-                _ => Err(e.into()),                    // return the error
+                intra::Error::Empty => Ok(0), // No students have signed up for this event
+                _ => Err(e.into()),           // Return the intra error
             };
         }
     };
 
-    let mut list = Vec::new();
+    // clear vector if it's not empty
+    if !list.is_empty() {
+        list.clear();
+    }
+
+    let mut number_students = 0;
 
     for student in &json {
         let login = match student["login"].as_str() {
@@ -146,7 +152,9 @@ pub async fn fetch_students(
             name,
             presence,
         });
+
+        number_students += 1;
     }
 
-    Ok(list)
+    Ok(number_students)
 }

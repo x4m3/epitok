@@ -8,6 +8,7 @@
 //!
 //! ```no_run
 //! use epitok::event::{Event, list_events_today};
+//! use epitok::student::fetch_students;
 //!
 //! # #[async_std::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -24,6 +25,10 @@
 //! println!("code: {}", first_event.code());
 //! println!("title: {}", first_event.title());
 //! println!("module: {}", first_event.module());
+//!
+//! // Fetch list of registered students
+//! let event_code = first_event.code().to_string();
+//! fetch_students(&mut first_event.students(), autologin, &event_code).await?;
 //!
 //! // Reset status of all students
 //! first_event.set_all_students_none();
@@ -46,7 +51,7 @@
 //! ```
 
 use crate::intra;
-use crate::student::{fetch_students, Presence, Student};
+use crate::student::{Presence, Student};
 use std::collections::HashMap;
 use std::{error, fmt};
 
@@ -435,16 +440,13 @@ pub async fn list_events(
             Some(start) => start,
             None => return Err(Error::TimeStart.into()),
         };
+
         let end = match parse_time(&event, Time::End) {
             Some(end) => end,
             None => return Err(Error::TimeEnd.into()),
         };
 
-        // fetch list of students registered to event
-        let students = match fetch_students(autologin, &code).await {
-            Ok(students) => students,
-            Err(e) => return Err(e),
-        };
+        let students = Vec::new();
 
         list.push(Event {
             code,
