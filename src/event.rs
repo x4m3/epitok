@@ -11,7 +11,7 @@
 //!
 //! # #[async_std::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let autologin = Some("https://intra.epitech.eu/auth-autologin".to_string());
+//! let autologin = "https://intra.epitech.eu/auth-autologin";
 //! let mut events: Vec<Event> = Vec::new();
 //!
 //! // Get list of today's events
@@ -342,7 +342,7 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 /// # #[async_std::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let date_str = "2020-07-01";
-/// let autologin = Some("https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd".to_string());
+/// let autologin = "https://intra.epitech.eu/auth-abcdefghijklmnopqrstuvwxyz1234567890abcd";
 /// let mut events: Vec<Event> = Vec::new();
 ///
 /// list_events(&mut events, &autologin, date_str).await?;
@@ -354,15 +354,9 @@ fn construct_event_url(json: &serde_json::Value) -> Option<String> {
 /// ```
 pub async fn list_events(
     list: &mut Vec<Event>,
-    autologin: &Option<String>,
+    autologin: &str,
     raw_date: &str,
 ) -> Result<usize, Box<dyn error::Error>> {
-    // check if autologin is valid
-    let autologin = match autologin {
-        Some(autologin) => autologin,
-        None => return Err(crate::auth::Error::NotSignedIn.into()),
-    };
-
     // check if the date provided is valid
     if let Err(e) = chrono::NaiveDate::parse_from_str(&raw_date, "%Y-%m-%d") {
         return Err(e.into());
@@ -448,7 +442,7 @@ pub async fn list_events(
 /// Get today's events
 pub async fn list_events_today(
     list: &mut Vec<Event>,
-    autologin: &Option<String>,
+    autologin: &str,
 ) -> Result<usize, Box<dyn error::Error>> {
     let date_str = chrono::Local::today().format("%Y-%m-%d").to_string();
 
