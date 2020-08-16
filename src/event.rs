@@ -56,14 +56,59 @@ use std::collections::HashMap;
 use std::{error, fmt};
 
 #[derive(Debug)]
+/// Raw information about event
+pub struct Code {
+    year: String,
+    module: String,
+    instance: String,
+    acti: String,
+    event: String,
+}
+
+impl Code {
+    /// Scholar year of event
+    /// # Output format
+    /// `0000`
+    pub fn year(&self) -> &str {
+        &self.year
+    }
+
+    /// Code of module
+    /// # Output format
+    /// `X-XXX-000`
+    pub fn module(&self) -> &str {
+        &self.module
+    }
+
+    /// Code of instance of module
+    /// # Output format
+    /// `XXX-0-0`
+    pub fn instance(&self) -> &str {
+        &self.instance
+    }
+
+    /// Code of activity
+    /// # Output format
+    /// `acti-000000`
+    pub fn acti(&self) -> &str {
+        &self.acti
+    }
+
+    /// Code of event
+    /// # Output format
+    /// `event-000000`
+    pub fn event(&self) -> &str {
+        &self.event
+    }
+}
+
+#[derive(Debug)]
 /// # Event
 ///
 /// Information about an event
 pub struct Event {
-    /// URL code of the event (aka the event ID in the intra)
-    code: String,
-    /// URL of event on the intra (pretty page)
-    intra_page: String,
+    /// Code of event
+    pub code: Code,
     /// Name of the event
     title: String,
     /// Module of the event (for clarity)
@@ -82,8 +127,15 @@ impl Event {
     /// # Output format
     ///
     /// `/module/2019/X-XXX-000/XXX-0-0/acti-000000/event-000000`
-    pub fn code(&self) -> &str {
-        &self.code
+    pub fn code(&self) -> String {
+        format!(
+            "/module/{}/{}/{}/{}/{}",
+            self.code.year(),
+            self.code.module(),
+            self.code.instance(),
+            self.code.acti(),
+            self.code.event()
+        )
     }
 
     /// Get URL to intra pretty page
@@ -91,8 +143,14 @@ impl Event {
     /// # Output format
     ///
     /// `/module/2019/X-XXX-000/XXX-0-0/acti-000000`
-    pub fn intra_page(&self) -> &str {
-        &self.intra_page
+    pub fn intra_page(&self) -> String {
+        format!(
+            "/module/{}/{}/{}/{}",
+            self.code.year(),
+            self.code.module(),
+            self.code.instance(),
+            self.code.acti()
+        )
     }
 
     /// Get name
@@ -260,7 +318,7 @@ impl Event {
         let students = self.export_students();
 
         // upload and check intra reply
-        intra::update_presences(autologin, self.code(), students).await?;
+        intra::update_presences(autologin, self.code().as_str(), students).await?;
 
         Ok(())
     }
@@ -321,24 +379,16 @@ fn parse_time(json: &serde_json::Value, time: Time) -> Option<String> {
     }
 }
 
-/// Construct the URL for the event based on the intra information
-///
-/// pretty: construct url for pretty page on the intra (not to be used with the api)
-fn construct_event_url(json: &serde_json::Value, pretty: bool) -> Option<String> {
-    let mut url = format!(
-        "/module/{}/{}/{}/{}",
-        json["scolaryear"].as_str()?,
-        json["codemodule"].as_str()?,
-        json["codeinstance"].as_str()?,
-        json["codeacti"].as_str()?
-    );
-
-    if !pretty {
-        url.push_str("/");
-        url.push_str(json["codeevent"].as_str()?);
+/// Gather code elements making event intra information
+fn construct_code(json: &serde_json::Value) -> Option<Code> {
+    Code {
+        year: json["scolaryear"].as_str()?.into(),
+        module: json["codemodule"].as_str()?.into(),
+        instance: json["codeinstance"].as_str()?.into(),
+        acti: json["codeacti"].as_str()?.into(),
+        event: json["codeevent"].as_str()?.into(),
     }
-
-    Some(url)
+    .into()
 }
 
 /// Show events of a particular date
@@ -416,13 +466,8 @@ pub async fn list_events(
             None => continue,
         };
 
-        let code = match construct_event_url(&event, false) {
+        let code = match construct_code(&event) {
             Some(code) => code,
-            None => return Err(Error::EventURL.into()),
-        };
-
-        let intra_page = match construct_event_url(&event, true) {
-            Some(intra_page) => intra_page,
             None => return Err(Error::EventURL.into()),
         };
 
@@ -450,7 +495,6 @@ pub async fn list_events(
 
         list.push(Event {
             code,
-            intra_page,
             title,
             module,
             start,
