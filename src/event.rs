@@ -27,8 +27,7 @@
 //! println!("module: {}", first_event.module());
 //!
 //! // Fetch list of registered students
-//! let event_code = first_event.code().to_string();
-//! fetch_students(&mut first_event.students(), autologin, &event_code).await?;
+//! first_event.fetch_students(autologin).await?;
 //!
 //! // Reset status of all students
 //! first_event.set_all_students_none();
@@ -51,7 +50,7 @@
 //! ```
 
 use crate::intra;
-use crate::student::{Presence, Student};
+use crate::student::{fetch_students, Presence, Student};
 use std::collections::HashMap;
 use std::{error, fmt};
 
@@ -118,7 +117,7 @@ pub struct Event {
     /// When event ends
     end: String,
     /// Registered students
-    students: Vec<Student>,
+    pub students: Vec<Student>,
 }
 
 impl Event {
@@ -173,7 +172,7 @@ impl Event {
         &self.end
     }
 
-    /// Get list of students
+    /// Get mutable list of students
     pub fn students(&mut self) -> &mut Vec<Student> {
         &mut self.students
     }
@@ -278,6 +277,19 @@ impl Event {
     /// Set students who do not have a presence status as missing
     pub fn set_remaining_students_missing(&mut self) {
         self.set_remaining_students_presence(Presence::Missing)
+    }
+
+    /// Fetch list of students from an existing event
+    ///
+    /// By default when you fetch an event, its students list is empty.
+    /// It can be populated using this function.
+    pub async fn fetch_students(
+        &mut self,
+        autologin: &str,
+    ) -> Result<usize, Box<dyn error::Error>> {
+        let code = self.code();
+        let students = self.students();
+        fetch_students(students, autologin, &code).await
     }
 
     /// Export registered students to intra format (to be uploaded)
@@ -516,4 +528,60 @@ pub async fn list_events_today(
     let date_str = chrono::Local::today().format("%Y-%m-%d").to_string();
 
     list_events(list, autologin, &date_str).await
+}
+
+/// Get a single event from its code
+pub async fn get_event(
+    autologin: &str,
+    year: &str,
+    module: &str,
+    instance: &str,
+    acti: &str,
+    event: &str,
+) -> Result<Event, Box<dyn error::Error>> {
+    let url = format!(
+        "{}/module/{}/{}/{}/{}/{}?format=json",
+        autologin, year, module, instance, acti, event
+    );
+
+    let json = match intra::get_obj(&url).await {
+        Ok(json) => json,
+        Err(e) => return Err(e.into()),
+    };
+
+    let code = match construct_code(&json) {
+        Some(code) => code,
+        None => return Err(Error::EventURL.into()),
+    };
+
+    let title = match json["acti_title"].as_str() {
+        Some(title) => title.to_string(),
+        None => return Err(Error::Title.into()),
+    };
+
+    let module = match json["module_title"].as_str() {
+        Some(module) => module.to_string(),
+        None => return Err(Error::Module.into()),
+    };
+
+    let start = match parse_time(&json, Time::Start) {
+        Some(start) => start,
+        None => return Err(Error::TimeStart.into()),
+    };
+
+    let end = match parse_time(&json, Time::End) {
+        Some(end) => end,
+        None => return Err(Error::TimeEnd.into()),
+    };
+
+    let students = Vec::new();
+
+    Ok(Event {
+        code,
+        title,
+        module,
+        start,
+        end,
+        students,
+    })
 }
