@@ -530,6 +530,34 @@ pub async fn list_events_today(
     list_events(list, autologin, &date_str).await
 }
 
+/// Get title when getting information from a single event
+///
+/// For some *very* odd reason, the intra is fucked up (wow shocker!)
+///
+/// When getting the title of an event from the planning, it's all good but
+/// when getting the title of a single event, for some events the title is returned *TWICE*.
+///
+/// WHY? I DO NOT KNOW WHY
+///
+/// So here's my dirty way to fix it:
+///
+/// 1. Split the string in half and remove the last character of the first string
+/// (there is the title twice but at least it's separated by a space)
+/// 2. Compare the two strings:
+/// * if they match, return only one part
+/// * else return the original title
+fn get_title_single_event(title: &str) -> String {
+    let mut first = String::from(title);
+    let second = first.split_off((first.len() / 2) + 1);
+    first.pop();
+
+    if first == second {
+        first
+    } else {
+        title.to_string()
+    }
+}
+
 /// Get a single event from its code
 pub async fn get_event(
     autologin: &str,
@@ -555,7 +583,7 @@ pub async fn get_event(
     };
 
     let title = match json["acti_title"].as_str() {
-        Some(title) => title.to_string(),
+        Some(title) => get_title_single_event(title),
         None => return Err(Error::Title.into()),
     };
 
