@@ -183,7 +183,7 @@ impl Event {
     ///
     /// * `login` - Student email address
     /// * `presence` - Type of presence to set
-    fn set_student_presence(&mut self, login: &str, presence: Presence) -> bool {
+    pub fn set_student_presence(&mut self, login: &str, presence: Presence) -> bool {
         // find student with matching login
         let student = match self.students.iter_mut().find(|s| s.get_login() == login) {
             Some(student) => student,
