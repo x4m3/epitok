@@ -28,6 +28,23 @@ pub enum Presence {
     Failed,
 }
 
+impl Presence {
+    pub fn from(s: &str) -> Self {
+        match s {
+            "present" => Presence::Present,
+            "Present" => Presence::Present,
+            "absent" => Presence::Missing,
+            "Missing" => Presence::Missing,
+            "N/A" => Presence::NotApplicable,
+            "NotApplicable" => Presence::NotApplicable,
+            "failed" => Presence::Failed,
+            "Failed" => Presence::Failed,
+            "None" => Presence::None,
+            _ => Presence::Failed,
+        }
+    }
+}
+
 impl fmt::Display for Presence {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match *self {
@@ -83,8 +100,6 @@ pub enum Error {
     Login,
     /// Student does not have a name
     Name,
-    /// Student has an unknown or invalid presence status
-    InvalidPresence,
 }
 
 impl error::Error for Error {}
@@ -94,7 +109,6 @@ impl fmt::Display for Error {
         let message = match *self {
             Error::Login => "Student does not have an epitech login",
             Error::Name => "Student does not have a name",
-            Error::InvalidPresence => "Student has a invalid presence code",
         };
         write!(f, "{}", message)
     }
@@ -137,13 +151,7 @@ pub async fn fetch_students(
         };
 
         let presence = match student["present"].as_str() {
-            Some(presence) => match presence {
-                "present" => Presence::Present,
-                "absent" => Presence::Missing,
-                "N/A" => Presence::NotApplicable,
-                "failed" => Presence::Failed,
-                _ => return Err(Error::InvalidPresence.into()),
-            },
+            Some(presence) => Presence::from(presence),
             None => Presence::None,
         };
 
