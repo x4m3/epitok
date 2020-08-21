@@ -3,6 +3,9 @@ name = "epitok"
 version = "0.1.0"
 authors = ["Philippe Loctaux <p@philippeloctaux.com>"]
 edition = "2018"
+repository = "https://github.com/x4m3/epitok"
+license = "MIT"
+description = "Library to replace tokens in epitech school"
 
 [dependencies]
 reqwest = { version = "0.10.6", features = ["json"] }
