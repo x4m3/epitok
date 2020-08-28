@@ -13,10 +13,7 @@
 //! This library will be useful only to people who are in possession of a privileged Epitech account (astek, aer, adm, pedago).
 //! So if you are just an Epitech student, this library won't be helpful for you at all.
 
-// internal modules
-mod intra;
-
-// public modules
 pub mod auth;
 pub mod event;
+pub mod intra;
 pub mod student;
